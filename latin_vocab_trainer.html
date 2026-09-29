@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Latin Vocab Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: one centered column on veined marble; each question card makes the Latin word its hero.
+   Type encodes language: Latin is always set in Gentium, English and controls in Source Sans. */
+:root {
+  --bg: #f5f3f6;
+  --surface: #ffffff;
+  --sunk: #ece8ef;
+  --ink: #1c1820;
+  --muted: #625a68;
+  --line: #dcd6e0;
+  --accent: #74205a;          /* Tyrian purple */
+  --accent-ink: #ffffff;
+  --accent-soft: #f4e7f0;
+  --good: #1b7345;  --good-soft: #e2f2e8;
+  --bad: #b3261e;   --bad-soft: #fbe8e6;
+  --warn: #8a5a00;  --warn-soft: #fbf0d9;
+  --shadow: 0 1px 2px rgba(45, 20, 45, .06), 0 10px 28px rgba(45, 20, 45, .07);
+  --f-display: "Cinzel", "Trajan Pro", "Times New Roman", serif;
+  --f-latin: "Gentium Book Plus", "Gentium Plus", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --f-ui: "Source Sans 3", "Source Sans Pro", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131015; --surface: #1c181f; --sunk: #26212a; --ink: #eee9f1; --muted: #a89fae; --line: #362f3b;
+    --accent: #e59ccb; --accent-ink: #2b0b1f; --accent-soft: #3a1e31;
+    --good: #6fd39c; --good-soft: #15301f; --bad: #ff8e80; --bad-soft: #3b1a17; --warn: #f2c35e; --warn-soft: #33290f;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .45), 0 10px 28px rgba(0, 0, 0, .35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131015; --surface: #1c181f; --sunk: #26212a; --ink: #eee9f1; --muted: #a89fae; --line: #362f3b;
+  --accent: #e59ccb; --accent-ink: #2b0b1f; --accent-soft: #3a1e31;
+  --good: #6fd39c; --good-soft: #15301f; --bad: #ff8e80; --bad-soft: #3b1a17; --warn: #f2c35e; --warn-soft: #33290f;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .45), 0 10px 28px rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 16px/1.5 var(--f-ui);
+  -webkit-font-smoothing: antialiased;
+}
+[hidden] { display: none !important; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.wrap { max-width: 44rem; margin: 0 auto; padding-inline: 16px; padding-block: 22px 40px; display: grid; gap: 16px; }
+
+/* ---------- header ---------- */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.top > div { min-width: 0; }
+#settingsBtn { flex: none; }
+.nw { white-space: nowrap; }
+.eyebrow { margin: 0 0 2px; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0; font: 600 clamp(1.2rem, 0.95rem + 1.4vw, 1.55rem)/1.15 var(--f-display); letter-spacing: .04em; color: var(--accent); text-wrap: balance; }
+
+.btn { border-radius: 10px; padding: 9px 16px; font-weight: 600; font-size: 15px; line-height: 1.2; border: 1px solid transparent; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+@media (hover: hover) { .btn-primary:hover { filter: brightness(1.08); } }
+.btn-ghost { background: var(--surface); color: var(--ink); border-color: var(--line); }
+@media (hover: hover) { .btn-ghost:hover { border-color: var(--accent); color: var(--accent); } }
+.btn-link { background: none; border: 0; padding: 4px 2px; color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.btn-link:hover { color: var(--accent); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; filter: none; }
+kbd { font: 600 11px/1 var(--f-ui); padding: 3px 5px; border-radius: 4px; border: 1px solid currentColor; opacity: .75; margin-left: 6px; }
+
+/* ---------- status ---------- */
+.status { display: grid; gap: 8px; }
+.status-line { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.status-line strong { color: var(--ink); font-weight: 600; }
+#endBtn { margin-left: auto; }
+.bar { height: 6px; border-radius: 99px; background: var(--sunk); overflow: hidden; }
+.bar > div { height: 100%; width: 0; background: var(--accent); border-radius: inherit; }
+.stats { display: flex; gap: 20px; flex-wrap: wrap; margin: 0; font-size: 14px; }
+.stats div { display: flex; gap: 6px; align-items: baseline; }
+.stats dt { color: var(--muted); }
+.stats dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ---------- question card ---------- */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: clamp(18px, 4vw, 28px); display: grid; gap: 16px; min-width: 0; }
+.card:focus { outline: none; }
+.meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.pill { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 9px; border-radius: 6px; background: var(--sunk); color: var(--ink); }
+.qtype { margin-left: auto; font-weight: 600; color: var(--accent); }
+.flag { color: var(--accent); font-weight: 600; }
+
+.prompt { margin: 4px 0 0; font-family: var(--f-latin); font-size: clamp(2rem, 1.2rem + 3.4vw, 2.9rem); line-height: 1.15; overflow-wrap: anywhere; text-wrap: balance; }
+.prompt.long { font-size: clamp(1.45rem, 1rem + 2vw, 2rem); line-height: 1.25; }
+.prompt .lemma { font-weight: 700; }
+.prompt .rest { color: var(--muted); }
+.instr { margin: -6px 0 0; color: var(--muted); font-size: 15px; }
+
+.options { display: grid; gap: 10px; }
+.opt {
+  display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; align-items: start; text-align: left;
+  padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); line-height: 1.4; min-width: 0;
+}
+.opt .key { grid-row: span 2; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 6px; background: var(--sunk); color: var(--muted); font-size: 13px; font-weight: 700; }
+.opt .txt { min-width: 0; overflow-wrap: anywhere; padding-top: 2px; }
+.opt .lat { grid-column: 2; font-family: var(--f-latin); font-style: italic; color: var(--muted); font-size: 15px; overflow-wrap: anywhere; }
+@media (hover: hover) {
+  .opt:not([disabled]):hover { border-color: var(--accent); }
+  .opt:not([disabled]):hover .key { color: var(--accent); }
+}
+.opt[disabled] { cursor: default; }
+.opt.is-right { border-color: var(--good); background: var(--good-soft); }
+.opt.is-right .key { background: var(--good); color: var(--surface); }
+.opt.is-wrong { border-color: var(--bad); background: var(--bad-soft); }
+.opt.is-wrong .key { background: var(--bad); color: var(--surface); }
+.opt.is-dim { opacity: .7; }
+
+.sa { display: grid; gap: 10px; }
+.sa input {
+  width: 100%; padding: 12px 14px; font-size: 18px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface);
+}
+.sa input::placeholder { color: var(--muted); opacity: .8; }
+.sa input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.sa input.is-right { border-color: var(--good); }
+.sa input.is-wrong { border-color: var(--bad); }
+.sa input.is-close { border-color: var(--warn); }
+.sa-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.hint { font-size: 14px; color: var(--warn); }
+
+.feedback { border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px; background: var(--sunk); }
+.feedback.good { background: var(--good-soft); }
+.feedback.bad { background: var(--bad-soft); }
+.feedback.close { background: var(--warn-soft); }
+.verdict { margin: 0; font-weight: 700; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.good .verdict { color: var(--good); }
+.bad .verdict { color: var(--bad); }
+.close .verdict { color: var(--warn); }
+.verdict .glyph { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; line-height: 1; background: var(--muted); }
+.good .glyph { background: var(--good); }
+.bad .glyph { background: var(--bad); }
+.close .glyph { background: var(--warn); }
+.verdict .glyph span { color: var(--surface); }
+.answer { margin: 0; }
+.answer .la { font-family: var(--f-latin); font-weight: 700; }
+.small { margin: 0; font-size: 14px; color: var(--muted); }
+.small em { font-family: var(--f-latin); }
+
+.next-row { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
+/* ---------- summary ---------- */
+.sum-head { display: grid; gap: 4px; }
+.sum-head h2 { margin: 0; font: 600 1.25rem/1.2 var(--f-display); letter-spacing: .04em; color: var(--accent); }
+.score { margin: 0; font-size: clamp(2.2rem, 1.6rem + 3vw, 3rem); font-weight: 700; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.score span { font-size: 1rem; font-weight: 600; color: var(--muted); margin-left: 6px; }
+.review { display: grid; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.review li { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 16px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.review .la { font-family: var(--f-latin); font-weight: 700; overflow-wrap: anywhere; }
+.review .en { overflow-wrap: anywhere; }
+.review .x { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.sum-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ---------- settings ---------- */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: clamp(18px, 4vw, 26px); display: grid; gap: 18px; min-width: 0; }
+.panel h2 { margin: 0; font: 600 1.1rem/1.2 var(--f-display); letter-spacing: .04em; color: var(--accent); }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend { padding: 0; margin-bottom: 8px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); display: flex; gap: 12px; align-items: baseline; width: 100%; }
+legend .btn-link { font-size: 12px; letter-spacing: 0; text-transform: none; padding: 0; }
+.choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.choice { position: relative; display: inline-flex; }
+.choice input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.choice span { display: inline-flex; align-items: baseline; gap: 6px; padding: 7px 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font-size: 15px; }
+.choice small { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.choice input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.choice input:checked + span small { color: var(--accent-ink); opacity: .8; }
+@media (hover: hover) { .choice input:hover + span { border-color: var(--accent); } }
+.choice input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chips .choice span { border-radius: 99px; padding: 5px 12px; font-size: 14px; }
+.chips .choice input:checked + span { background: var(--accent-soft); color: var(--accent); }
+.chips .choice input:checked + span small { color: var(--accent); }
+.chapters .choice span { min-width: 2.5em; justify-content: center; font-variant-numeric: tabular-nums; }
+.panel-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 4px; border-top: 1px solid var(--line); padding-block-start: 16px; }
+.match { margin: 0; font-size: 15px; color: var(--muted); }
+.match strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.keys { font-size: 13px; color: var(--muted); text-align: center; }
+@media (hover: none) and (pointer: coarse) { .keys, .opt .key-hint, kbd { display: none; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .bar > div { transition: width .35s ease; }
+  .opt, .choice span, .btn { transition: border-color .15s ease, background-color .15s ease, color .15s ease; }
+  .card.enter { animation: rise .22s ease-out; }
+  @keyframes rise { from { transform: translateY(4px); opacity: .6; } to { transform: none; opacity: 1; } }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow"><span class="nw">Vocabula discenda</span> · <span class="nw">Suburani 1–17</span></p>
+      <h1>Latin Vocab Trainer</h1>
+    </div>
+    <button id="settingsBtn" class="btn btn-ghost" type="button" aria-expanded="false" aria-controls="settings">Settings</button>
+  </header>
+
+  <form id="settings" class="panel" hidden>
+    <h2>Set up a round</h2>
+    <fieldset>
+      <legend>Word list</legend>
+      <div class="choices" id="listChoices"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Question type</legend>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="mode" value="mixed" id="mode-mixed" checked><span>Mixed</span></label>
+        <label class="choice"><input type="radio" name="mode" value="mc" id="mode-mc"><span>Multiple choice only</span></label>
+        <label class="choice"><input type="radio" name="mode" value="sa" id="mode-sa"><span>Short answer only</span></label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Words per round</legend>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="size" value="10" id="size-10"><span>10</span></label>
+        <label class="choice"><input type="radio" name="size" value="20" id="size-20" checked><span>20</span></label>
+        <label class="choice"><input type="radio" name="size" value="30" id="size-30"><span>30</span></label>
+        <label class="choice"><input type="radio" name="size" value="50" id="size-50"><span>50</span></label>
+        <label class="choice"><input type="radio" name="size" value="all" id="size-all"><span>All matching</span></label>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Parts of speech <button class="btn-link" type="button" data-all="pos">All</button><button class="btn-link" type="button" data-none="pos">None</button></legend>
+      <div class="choices chips" id="posChoices"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Chapters <button class="btn-link" type="button" data-all="ch">All</button><button class="btn-link" type="button" data-none="ch">None</button></legend>
+      <div class="choices chips chapters" id="chChoices"></div>
+    </fieldset>
+    <div class="panel-foot">
+      <p class="match" id="matchCount"></p>
+      <div class="sum-actions">
+        <button class="btn btn-ghost" type="button" id="closeSettings">Back to round</button>
+        <button class="btn btn-primary" type="submit" id="startBtn">Start round</button>
+      </div>
+    </div>
+  </form>
+
+  <section id="status" class="status" aria-label="Round progress">
+    <div class="status-line">
+      <span id="roundLabel"></span>
+      <button class="btn-link" type="button" id="endBtn">End round</button>
+    </div>
+    <div class="bar" role="progressbar" aria-label="Words learned this round" aria-valuemin="0" id="bar"><div id="barFill"></div></div>
+    <dl class="stats">
+      <div><dt>Learned</dt><dd id="stLearned">0 / 0</dd></div>
+      <div><dt>Right on first try</dt><dd id="stFirst">–</dd></div>
+      <div><dt>Streak</dt><dd id="stStreak">0</dd></div>
+    </dl>
+  </section>
+
+  <main id="card" class="card" tabindex="-1" aria-live="off">
+    <div class="meta">
+      <span class="pill" id="qPos"></span>
+      <span id="qCh"></span>
+      <span class="flag" id="qRetry" hidden>Try again</span>
+      <span class="qtype" id="qType"></span>
+    </div>
+    <p class="prompt" id="prompt" lang="la"></p>
+    <p class="instr" id="instr"></p>
+
+    <div class="options" id="mcArea" role="group" aria-label="Answer choices"></div>
+
+    <form class="sa" id="saArea" autocomplete="off" hidden>
+      <label for="saInput" class="sr-only">English meaning</label>
+      <input id="saInput" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="Type the English meaning">
+      <div class="sa-actions">
+        <button class="btn btn-primary" type="submit" id="checkBtn">Check</button>
+        <button class="btn btn-ghost" type="button" id="revealBtn">Show answer</button>
+        <span class="hint" id="saHint" hidden>Type an answer first, or choose Show answer.</span>
+      </div>
+    </form>
+
+    <div class="feedback" id="feedback" role="status" hidden></div>
+
+    <div class="next-row" id="nextRow" hidden>
+      <button class="btn btn-ghost" type="button" id="overrideBtn" hidden>Count it as correct</button>
+      <button class="btn btn-primary" type="button" id="nextBtn">Next<kbd>Enter</kbd></button>
+    </div>
+  </main>
+
+  <main id="summary" class="card" tabindex="-1" hidden></main>
+
+  <p class="sr-only" id="announce" aria-live="polite"></p>
+  <p class="keys" id="keys">Keys: <strong>A–D</strong> or <strong>1–4</strong> pick an answer · <strong>Enter</strong> checks and moves on</p>
+</div>
+
+<script type="application/json" id="vocab-data">{"ess":[{"l":"ā / ab (+ ablative)","e":"from, away from; by","p":"Preposition","c":[6],"k":1},{"l":"ab-sum, ab-esse, ā-fuī","e":"to be absent, away","p":"Verb","c":[11],"k":1},{"l":"ac (=atque)","e":"and","p":"Conjunction","c":[16],"k":1},{"l":"ac-cidō, ac-cidere, ac-cidī (ad + cado, cadere, cecidi: fall)","e":"to happen","p":"Verb","c":[11],"k":1},{"l":"ac-cipiō, ac-cipere, ac-cēpī (ad + capiō, capere, cēpī)","e":"to accept, take in, receive","p":"Verb","c":[10],"k":1},{"l":"ad (+ acc.)","e":"to, towards","p":"Preposition","c":[4],"k":1},{"l":"adsum","e":"I am here, I am present","p":"Verb","c":[4],"k":1},{"l":"ad-veniō, ad-venīre, ad-vēnī, ad-ventum","e":"to arrive (to come to)","p":"Verb","c":[9],"k":1},{"l":"agō, agere, ēgī, actum","e":"to do","p":"Verb","c":[8],"k":1},{"l":"alius, alia, aliud","e":"other","p":"Adjective","c":[10],"k":1},{"l":"altus, alta, altum","e":"high, deep","p":"Adjective","c":[11],"k":1},{"l":"ambulō","e":"I walk","p":"Verb","c":[3],"k":1},{"l":"amīcus / amīcum (m.)","e":"friend","p":"Noun","c":[3],"k":1},{"l":"amō, amāre, amāvī, amātus","e":"to love, to like","p":"Verb","c":[14],"k":1},{"l":"amor, amōris (m.)","e":"love","p":"Noun","c":[14],"k":1},{"l":"ancilla / ancillam (f.)","e":"enslaved woman, female slave","p":"Noun","c":[3],"k":1},{"l":"animal / animal (n.)","e":"animal","p":"Noun","c":[4],"k":1},{"l":"annus / annum, m.","e":"a year","p":"Noun","c":[10],"k":1},{"l":"anteā","e":"before","p":"Adverb","c":[15],"k":1},{"l":"appareō, apparēre, apparui, –","e":"to appear","p":"Verb","c":[17],"k":1},{"l":"appropinquō, appropinquāre, appropinquāvī","e":"to approach, come near to","p":"Verb","c":[7],"k":1},{"l":"aqua / aquam (f.)","e":"water","p":"Noun","c":[5],"k":1},{"l":"audiō, audīre","e":"to hear, listen to","p":"Verb","c":[5],"k":1},{"l":"au-FERŌ, au-FERRE, abs-TULĪ, ab–LATUM (ab + fero)","e":"to carry off, to steal","p":"Verb","c":[16],"k":1},{"l":"bellum gero","e":"to wage war","p":"Verb","c":[8],"k":1},{"l":"bellum, bellī, n.","e":"a war","p":"Noun","c":[15],"k":1},{"l":"bene","e":"well","p":"Adverb","c":[11],"k":1},{"l":"benignus, benigna, benignum","e":"kind","p":"Adjective","c":[17],"k":1},{"l":"bibō, bibere, bibī, –","e":"to drink","p":"Verb","c":[8],"k":1},{"l":"bonus, bona, bonum","e":"good","p":"Adjective","c":[10],"k":1},{"l":"brevis, brevis, breve","e":"short, brief","p":"Adjective","c":[16],"k":1},{"l":"cadō","e":"I fall","p":"Verb","c":[2],"k":1},{"l":"caelum, caelī, n.","e":"sky, heaven","p":"Noun","c":[12],"k":1},{"l":"capiō, capere","e":"to take, capture","p":"Verb","c":[6],"k":1},{"l":"caput, capitis, n.","e":"a head","p":"Noun","c":[4,12],"k":1},{"l":"cēlō, cēlāre, cēlāvī, celātum","e":"to hide","p":"Verb","c":[16],"k":1},{"l":"cēna, cēnae, f.","e":"a dinner, meal","p":"Noun","c":[15],"k":1},{"l":"cēterī, cēterae, cētera, pl.","e":"the rest, the others","p":"Adjective","c":[15],"k":1},{"l":"cibus / cibum (m.)","e":"food","p":"Noun","c":[2],"k":1},{"l":"cīvis / cīvem m. or f.","e":"a citizen","p":"Noun","c":[9],"k":1},{"l":"clāmō","e":"I shout","p":"Verb","c":[3],"k":1},{"l":"clāmor / clāmōrem (m.)","e":"shout, noise","p":"Noun","c":[3],"k":1},{"l":"coepī (uses perfect endings)","e":"to begin (can be translated either present or perfect)","p":"Verb","c":[13],"k":1},{"l":"cōgitō, cōgitāre, cōgitāvī, cōgitātus","e":"to think, consider","p":"Verb","c":[14],"k":1},{"l":"cog-nōscō, cog-nōscere, cog-nōvī, cog-nitus","e":"to get to know, find out, learn","p":"Verb","c":[15],"k":1},{"l":"com-ēs, com-itis, m.f.","e":"a comrade, companion","p":"Noun","c":[15],"k":1},{"l":"con-FICIŌ, con-FICere, con-FĒCĪ, con-FECTUS(cum + faciō)","e":"to finish","p":"Verb","c":[14],"k":1},{"l":"cōnsilium, cōnsiliī N","e":"a plan","p":"Noun","c":[14],"k":1},{"l":"cōn-SPICIŌ, cōn-SPICERE, cōn-SPEXĪ, con-SPECTUM (spicio, spicere, spexi, spectum: to look at)","e":"to catch sight of, to notice","p":"Verb","c":[8],"k":1},{"l":"cōnstituō, cōnstituere, cōnstituī, cōnstitūtus","e":"to decide","p":"Verb","c":[14],"k":1},{"l":"cōnsūmō, cōnsūmere, cōnsūmpsī","e":"to consume, eat","p":"Verb","c":[13],"k":1},{"l":"contra + accusative","e":"against","p":"Preposition","c":[10],"k":1},{"l":"corpus, corporis, n.","e":"a body","p":"Noun","c":[12],"k":1},{"l":"crūdēlis, crūdēlis, crūdēle","e":"cruel","p":"Adjective","c":[12],"k":1},{"l":"cum (+ ablative)","e":"with","p":"Preposition","c":[3],"k":1},{"l":"cupiō, cupere","e":"to want, desire","p":"Verb","c":[5],"k":1},{"l":"cūr?","e":"why?","p":"Adverb","c":[7],"k":1},{"l":"currō","e":"I run","p":"Verb","c":[3],"k":1},{"l":"custōs / custōdem (m./f.)","e":"guard","p":"Noun","c":[5],"k":1},{"l":"dē + abl.","e":"from, down from, about (concerning)","p":"Preposition","c":[8],"k":1},{"l":"dea / deam, f.","e":"a goddess","p":"Noun","c":[10],"k":1},{"l":"dēbeō, dēbēre","e":"to owe; ought, must","p":"Verb","c":[5],"k":1},{"l":"deinde","e":"then","p":"Adverb","c":[10],"k":1},{"l":"dēleō, dēlēre, dēlēvī, dēlētus","e":"to destroy","p":"Verb","c":[12],"k":1},{"l":"deus / deum (m.)","e":"god","p":"Noun","c":[4],"k":1},{"l":"dīcō","e":"I say","p":"Verb","c":[3],"k":1},{"l":"diēs / diem (m.)","e":"day","p":"Noun","c":[6],"k":1},{"l":"difficilis, difficile (uses 3rd declension endings)","e":"difficult","p":"Adjective","c":[9],"k":1},{"l":"dīrus, dīra, dīrum","e":"dire, dreadful","p":"Adjective","c":[14],"k":1},{"l":"discēdō, discēdere","e":"to leave, depart","p":"Verb","c":[6],"k":1},{"l":"diū","e":"for a long time","p":"Adverb","c":[12],"k":1},{"l":"dō, dare","e":"to give","p":"Verb","c":[5],"k":1},{"l":"domina / dominam, f.","e":"a mistress, lady","p":"Noun","c":[9],"k":1},{"l":"dominus / dominum (m.)","e":"master, enslaver","p":"Noun","c":[4],"k":1},{"l":"domus / domum F.","e":"a house, a home","p":"Noun","c":[8],"k":1},{"l":"dōnum / dōnum (n.)","e":"gift","p":"Noun","c":[4],"k":1},{"l":"dormiō","e":"I sleep","p":"Verb","c":[1],"k":1},{"l":"dūcō","e":"I lead","p":"Verb","c":[2],"k":1},{"l":"dūrus, dūra, dūrum","e":"hard, harsh","p":"Adjective","c":[17],"k":1},{"l":"dux, ducis M","e":"a leader","p":"Noun","c":[11],"k":1},{"l":"ē / ex (+ ablative)","e":"from, out of","p":"Preposition","c":[6],"k":1},{"l":"eam F.","e":"her, it (accusative)","p":"Pronoun","c":[8],"k":1},{"l":"effugiō, effugere","e":"to escape","p":"Verb","c":[5],"k":1},{"l":"ego","e":"I","p":"Pronoun","c":[1],"k":1},{"l":"emō, emere, ēmī, ēmptus","e":"to buy","p":"Verb","c":[17],"k":1},{"l":"eō, īre, iī","e":"to go","p":"Verb","c":[15],"k":1},{"l":"eōs","e":"them (masc. pl.)","p":"Pronoun","c":[14],"k":1},{"l":"epistula / epistulam F.","e":"a letter (that you send someone, not a letter of the alphabet)","p":"Noun","c":[6,7],"k":1},{"l":"equus / equum (m.)","e":"horse","p":"Noun","c":[3],"k":1},{"l":"es","e":"you are","p":"Verb","c":[1],"k":1},{"l":"est","e":"he/she/it is; there is","p":"Verb","c":[1],"k":1},{"l":"et","e":"and; even, also","p":"Conjunction","c":[2,17],"k":1},{"l":"etiam","e":"even, also","p":"Adverb","c":[15],"k":1},{"l":"eum M.","e":"him, it (accusative)","p":"Pronoun","c":[8],"k":1},{"l":"exspectō, exspectāre","e":"to wait for, expect","p":"Verb","c":[6],"k":1},{"l":"faciō, facere","e":"to make, do","p":"Verb","c":[6],"k":1},{"l":"fēlīx, fēlīx, fēlīx","e":"lucky, happy","p":"Adjective","c":[3],"k":1},{"l":"fēmina, fēminae F","e":"a woman","p":"Noun","c":[14],"k":1},{"l":"ferō, ferre, tulī","e":"to bring, carry, bear","p":"Verb","c":[10],"k":1},{"l":"ferōx, ferōx, ferōcis","e":"fierce, ferocious","p":"Adjective","c":[15],"k":1},{"l":"festīnō","e":"I hurry","p":"Verb","c":[3],"k":1},{"l":"fidēlis, fidēle","e":"loyal, faithful","p":"Adjective","c":[10],"k":1},{"l":"fīlia / fīliam (f.)","e":"daughter","p":"Noun","c":[2],"k":1},{"l":"fīlius / fīlium (m.)","e":"son","p":"Noun","c":[2],"k":1},{"l":"flumen, fluminis N","e":"a river","p":"Noun","c":[11],"k":1},{"l":"fortis, forte","e":"strong, brave","p":"Adjective","c":[11],"k":1},{"l":"forum / forum (n.)","e":"forum, marketplace","p":"Noun","c":[2],"k":1},{"l":"frāter","e":"brother","p":"Noun","c":[1],"k":1},{"l":"frustrā","e":"unsuccessfully, in vain","p":"Adverb","c":[11],"k":1},{"l":"fugiō, fugere, fūgī","e":"to run away, to flee","p":"Verb","c":[11],"k":1},{"l":"gerō, gerere, gessī, gestum","e":"to wear","p":"Verb","c":[8],"k":1},{"l":"gladius / gladium (m.)","e":"sword","p":"Noun","c":[3],"k":1},{"l":"gravis, grave (uses 3rd declension endings)","e":"heavy; serious","p":"Adjective","c":[9],"k":1},{"l":"habeō","e":"I have","p":"Verb","c":[2],"k":1},{"l":"habitō","e":"I live","p":"Verb","c":[2],"k":1},{"l":"hic, haec, hoc","e":"this/these; he/she/it","p":"Pronoun","c":[16],"k":1},{"l":"hodiē","e":"today","p":"Adverb","c":[11],"k":1},{"l":"homō / hominem M.","e":"a human being, person","p":"Noun","c":[7],"k":1},{"l":"hōra","e":"hour","p":"Noun","c":[1],"k":1},{"l":"hortus, hortī, m.","e":"a garden","p":"Noun","c":[15],"k":1},{"l":"hostis / hostem, m.","e":"an enemy","p":"Noun","c":[9],"k":1},{"l":"hūc","e":"here (\"to this place,\" with motion or implied motion)","p":"Adverb","c":[17],"k":1},{"l":"iaceō, iacēre, iacuī, –","e":"to lie down","p":"Verb","c":[8],"k":1},{"l":"iaciō, iacere, iēcī","e":"to throw","p":"Verb","c":[10],"k":1},{"l":"iam","e":"now, already","p":"Adverb","c":[6],"k":1},{"l":"iānua, iānuae, f.","e":"a door, doorway","p":"Noun","c":[12],"k":1},{"l":"ibi","e":"there","p":"Adverb","c":[11],"k":1},{"l":"igitur","e":"therefore","p":"Conjunction","c":[17],"k":1},{"l":"ille, illa, illud","e":"that/those; he/she/it","p":"Pronoun","c":[16],"k":1},{"l":"imperātor / imperātōrem m.","e":"an emperor, general","p":"Noun","c":[9],"k":1},{"l":"imperium, imperiī N.","e":"empire, power","p":"Noun","c":[16],"k":1},{"l":"in (+ acc. / + abl.)","e":"(+ accusative) into, onto; (+ ablative) in, on","p":"Preposition","c":[1,6],"k":1},{"l":"incendō, incendere, incendī, incensum","e":"to burn, to set on fire","p":"Verb","c":[8],"k":1},{"l":"īnfēlīx, īnfēlīx, īnfēlīx","e":"unlucky, unhappy","p":"Adjective","c":[3],"k":1},{"l":"ingens (uses 3rd declension endings, more on this to come)","e":"huge","p":"Adjective","c":[7],"k":1},{"l":"inquit","e":"he/she says, said","p":"Verb","c":[6],"k":1},{"l":"īnsula / īnsulam F.","e":"an island or apartment building","p":"Noun","c":[1,7],"k":1},{"l":"intellegō, intellegere, intellexi","e":"to understand, realize","p":"Verb","c":[13],"k":1},{"l":"inter + acc.","e":"among, between","p":"Preposition","c":[13],"k":1},{"l":"intereā","e":"meanwhile","p":"Adverb","c":[15],"k":1},{"l":"intrō","e":"I enter","p":"Verb","c":[2],"k":1},{"l":"in-veniō, in-venīre, in-vēnī","e":"to find","p":"Verb","c":[11],"k":1},{"l":"īrātus, irata, iratum","e":"angry","p":"Adjective","c":[9],"k":1},{"l":"is, ea, id","e":"this OR that, he/she/it/they","p":"Pronoun","c":[17],"k":1},{"l":"ita verō","e":"yes, yes truly, yes indeed","p":"Phrase","c":[13],"k":1},{"l":"itaque","e":"and so, therefore","p":"Conjunction","c":[11],"k":1},{"l":"iter / iter, n.","e":"a journey, route, way","p":"Noun","c":[9],"k":1},{"l":"iterum","e":"again","p":"Adverb","c":[12],"k":1},{"l":"iubeō, iubēre, iussī","e":"to order","p":"Verb","c":[15],"k":1},{"l":"iuvenis / iuvenem (m./f.)","e":"young person, young man","p":"Noun","c":[5],"k":1},{"l":"labor, labōris, m.","e":"work","p":"Noun","c":[13],"k":1},{"l":"labōrō","e":"I work","p":"Verb","c":[1],"k":1},{"l":"lacrimō, lacrimāre, lacrimāvī, lacrimatum","e":"to cry, weep","p":"Verb","c":[9],"k":1},{"l":"laetus, laeta, laetum","e":"happy","p":"Adjective","c":[3],"k":1},{"l":"laudō","e":"I praise","p":"Verb","c":[4],"k":1},{"l":"legō, legere, lēgī, lectum","e":"to choose, to read","p":"Verb","c":[1,16],"k":1},{"l":"lentus, lenta, lentum","e":"slow","p":"Adjective","c":[17],"k":1},{"l":"libenter","e":"willingly, with pleasure","p":"Adverb","c":[17],"k":1},{"l":"līberī / līberōs, m., only used in plural (Don't confuse with liber, libri M: book)","e":"children","p":"Noun","c":[9],"k":1},{"l":"līberō, līberāre, līberāvī, liberātum","e":"to set free","p":"Verb","c":[17],"k":1},{"l":"lībertus, lībertī, m.","e":"a freedman, former slave","p":"Noun","c":[15],"k":1},{"l":"locus / locum, m.","e":"a place","p":"Noun","c":[10],"k":1},{"l":"longus, longa, longum","e":"long","p":"Adjective","c":[13],"k":1},{"l":"lūx, lūcis F.","e":"light (opp. of darkness)","p":"Noun","c":[16],"k":1},{"l":"magnus, magna, magnum","e":"big, large, great","p":"Adjective","c":[2],"k":1},{"l":"maneō, manēre","e":"to stay, remain","p":"Verb","c":[5],"k":1},{"l":"mare, maris N","e":"sea","p":"Noun","c":[11],"k":1},{"l":"marītus / marītum (m.)","e":"husband","p":"Noun","c":[6],"k":1},{"l":"māter / mātrem (f.)","e":"mother","p":"Noun","c":[6],"k":1},{"l":"medius, media, medium (agrees with its noun: in mediā urbe = in the middle of the city)","e":"middle, middle of","p":"Adjective","c":[9],"k":1},{"l":"meus","e":"my, mine","p":"Adjective","c":[1],"k":1},{"l":"miles / militem M.","e":"a soldier","p":"Noun","c":[7],"k":1},{"l":"minimē","e":"in no way (can also be a way of saying \"no\")","p":"Adverb","c":[7],"k":1},{"l":"miser, misera, miserum","e":"poor, unfortunate","p":"Adjective","c":[10],"k":1},{"l":"mittō, mittere, mīsī, missum","e":"to send","p":"Verb","c":[12],"k":1},{"l":"mōns, montis (m.)","e":"mountain","p":"Noun","c":[14],"k":1},{"l":"mors, mortis (f.)","e":"death","p":"Noun","c":[14],"k":1},{"l":"mox","e":"soon","p":"Adverb","c":[8],"k":1},{"l":"multum","e":"much","p":"Adverb","c":[15],"k":1},{"l":"multus, multa, multum","e":"much; (pl.) many","p":"Adjective","c":[3],"k":1},{"l":"mūrus, mūrī, m.","e":"a wall","p":"Noun","c":[13],"k":1},{"l":"narrō, narrāre, narrāvi, narrātum","e":"to tell, to relate","p":"Verb","c":[7],"k":1},{"l":"nauta / nautam M.","e":"a sailor","p":"Noun","c":[7],"k":1},{"l":"nāvigō, nāvigāre, nāvigāvī","e":"to sail","p":"Verb","c":[11],"k":1},{"l":"navis, navis F","e":"a ship","p":"Noun","c":[11],"k":1},{"l":"nec","e":"and not, nor, neither","p":"Conjunction","c":[14],"k":1},{"l":"nec … nec …","e":"neither … nor …","p":"Conjunction","c":[14],"k":1},{"l":"necō, necāre, necāvī, necātus","e":"to kill","p":"Verb","c":[14],"k":1},{"l":"nēmō / nēminem","e":"no one, nobody","p":"Pronoun","c":[5],"k":1},{"l":"ne-SCIŌ, ne-SCĪRE, ne-SCĪVĪ, ne-scitus","e":"to not know","p":"Verb","c":[14],"k":1},{"l":"nihil N","e":"nothing","p":"Noun","c":[8],"k":1},{"l":"nōlō, nōlle","e":"to not want, be unwilling","p":"Verb","c":[5],"k":1},{"l":"nōmen, nōminis, n.","e":"a name","p":"Noun","c":[13],"k":1},{"l":"non","e":"not","p":"Adverb","c":[1],"k":1},{"l":"nōn-ne?","e":"surely?","p":"Conjunction","c":[15],"k":1},{"l":"nōs / nōs","e":"we, us","p":"Pronoun","c":[4],"k":1},{"l":"noster, nostra, nostrum","e":"our","p":"Adjective","c":[8],"k":1},{"l":"novus, nova, novum","e":"new","p":"Adjective","c":[10],"k":1},{"l":"nox / noctem (f.)","e":"night","p":"Noun","c":[5],"k":1},{"l":"nūllus, nūlla, nūllum","e":"no __, not any __","p":"Adjective","c":[10],"k":1},{"l":"numquam","e":"never","p":"Adverb","c":[14],"k":1},{"l":"nunc","e":"now","p":"Adverb","c":[7],"k":1},{"l":"nūntiō, nūntiāre, nūntiāvī","e":"to announce, report","p":"Verb","c":[15],"k":1},{"l":"nūntius / nūntium, m.","e":"a messenger; message, news","p":"Noun","c":[9],"k":1},{"l":"oc-cīdō, oc-cīdere, oc-cīdī","e":"to kill","p":"Verb","c":[10],"k":1},{"l":"of-ferō, of-ferre, ob-tulī, ob-latus (ob + fero, ferre, tuli, latus)","e":"to offer","p":"Verb","c":[12],"k":1},{"l":"olim","e":"once, \"once upon a time\"","p":"Adverb","c":[7],"k":1},{"l":"omnis, omnis, omne","e":"every, all","p":"Adjective","c":[3],"k":1},{"l":"op-pugnō, op-pugnāre, op-pugnāvī, op-pugnātum (ob + pugnō)","e":"to attack","p":"Verb","c":[17],"k":1},{"l":"ōrō, ōrāre, ōrāvī, ōrātum","e":"to beg, beg for","p":"Verb","c":[16],"k":1},{"l":"ostendō, ostendere, ostendī, ostensus","e":"to show","p":"Verb","c":[14],"k":1},{"l":"paene","e":"almost","p":"Adverb","c":[17],"k":1},{"l":"parō, parāre, parāvī","e":"to prepare","p":"Verb","c":[13],"k":1},{"l":"pars / partem F.","e":"a part","p":"Noun","c":[7],"k":1},{"l":"parvus, parva, parvum","e":"small","p":"Adjective","c":[4],"k":1},{"l":"pater","e":"father","p":"Noun","c":[1],"k":1},{"l":"paucī, paucae, pauca (only plural forms)","e":"few, a few","p":"Adjective","c":[9],"k":1},{"l":"pāx / pacem, f.","e":"peace","p":"Noun","c":[10],"k":1},{"l":"pecūnia / pecūniam (f.)","e":"money","p":"Noun","c":[2],"k":1},{"l":"per (+ accusative)","e":"through","p":"Preposition","c":[3],"k":1},{"l":"per-eō, per-īre, per-iī","e":"to die (literally \"to go through\")","p":"Verb","c":[10],"k":1},{"l":"perīculum / perīculum (n.)","e":"danger","p":"Noun","c":[4],"k":1},{"l":"perterritus, perterrita, perterritum","e":"terrified","p":"Adjective","c":[4],"k":1},{"l":"petō, petere, petīvī, petitum","e":"to attack; seek, beg, ask for","p":"Verb","c":[9],"k":1},{"l":"plēnus, plēna, plēnum","e":"full","p":"Adjective","c":[17],"k":1},{"l":"porta / portam F.","e":"gate","p":"Noun","c":[8],"k":1},{"l":"portō, portāre","e":"to carry","p":"Verb","c":[5],"k":1},{"l":"possum, posse","e":"to be able, can","p":"Verb","c":[5],"k":1},{"l":"post + acc.","e":"after, behind","p":"Preposition","c":[13],"k":1},{"l":"postquam","e":"after","p":"Conjunction","c":[8],"k":1},{"l":"praebeō, praebēre, praebuī, praebitus","e":"to provide","p":"Verb","c":[17],"k":1},{"l":"praemium, praemiī, n.","e":"a prize, reward, profit","p":"Noun","c":[13],"k":1},{"l":"prīmus, prīma, prīmum","e":"first","p":"Adjective","c":[3],"k":1},{"l":"prīnceps, prīncipis M.","e":"chief, emperor","p":"Noun","c":[16],"k":1},{"l":"prō + ablative","e":"in front of; (in exchange) for, in return for","p":"Preposition","c":[11,17],"k":1},{"l":"prō-CĒDŌ, prō-CĒDERE, prō-CESSI, prō-CESSUM (cedo, cedere, cessi, cessum: to go)","e":"to go forward, to proceed","p":"Verb","c":[8],"k":1},{"l":"prope (+ accusative)","e":"near","p":"Preposition","c":[6],"k":1},{"l":"puella / puellam (f.)","e":"girl","p":"Noun","c":[4],"k":1},{"l":"puer / puerum M.","e":"a boy","p":"Noun","c":[7],"k":1},{"l":"pugnō, pugnāre, pugnāvī","e":"to fight","p":"Verb","c":[7],"k":1},{"l":"pulcher, pulchra, pulchrum","e":"beautiful, handsome","p":"Adjective","c":[5],"k":1},{"l":"putō, putāre, putāvī","e":"to think (that…), to have an opinion","p":"Verb","c":[15],"k":1},{"l":"quaerō","e":"I look for, search for","p":"Verb","c":[2],"k":1},{"l":"quam + superlative","e":"as _ as possible","p":"Phrase","c":[17],"k":1},{"l":"quam __ (+ adj. or adv.)!","e":"how __!","p":"Adverb","c":[10],"k":1},{"l":"quamquam","e":"although","p":"Conjunction","c":[13],"k":1},{"l":"qui, quae, quod","e":"who, which","p":"Pronoun","c":[13],"k":1},{"l":"quis? quid?","e":"who? what?","p":"Pronoun","c":[12],"k":1},{"l":"quō","e":"where to (\"where\" with motion, e.g. \"where are we going?)","p":"Adverb","c":[16],"k":1},{"l":"quod","e":"because","p":"Conjunction","c":[4],"k":1},{"l":"quō-modō","e":"how? (literally \"in what way\")","p":"Adverb","c":[13],"k":1},{"l":"quoque","e":"also, too","p":"Adverb","c":[2],"k":1},{"l":"rapiō, rapere, rapuī, raptum","e":"to seize, to grab, to steal","p":"Verb","c":[16],"k":1},{"l":"re-d-eō, re-d-īre, re-d-iī, re-d-itus","e":"to go back, come back, return","p":"Verb","c":[12],"k":1},{"l":"rēgīna, rēgīnae F.","e":"queen","p":"Noun","c":[16],"k":1},{"l":"relinquō, relinquere, relīquī, relictus","e":"to leave behind","p":"Verb","c":[17],"k":1},{"l":"res / rem F.","e":"a thing, a situation (for now, the only forms you need to know are res (nominative singular) and rem (accusative singular)","p":"Noun","c":[7],"k":1},{"l":"re-SISTŌ, re-SISTERE, re-STITĪ, – (re + relative of sto, stare)","e":"to resist (+ dative)","p":"Verb","c":[16],"k":1},{"l":"respondeō, respondēre","e":"to reply, answer","p":"Verb","c":[5],"k":1},{"l":"re-VENIŌ, re-VENĪRE, re-VĒNĪ, re-VENTUM","e":"to come back, to return","p":"Verb","c":[16],"k":1},{"l":"rēx / rēgem (m.)","e":"king","p":"Noun","c":[4],"k":1},{"l":"rīdeō","e":"I laugh, smile","p":"Verb","c":[1],"k":1},{"l":"rogō, rogāre","e":"to ask","p":"Verb","c":[6],"k":1},{"l":"Rōma, Rōmae, f.","e":"Rome","p":"Noun","c":[12],"k":1},{"l":"Rōmānus, Rōmāna, Rōmānum","e":"Roman","p":"Adjective","c":[4],"k":1},{"l":"sacer, sacra, sacrum","e":"sacred, holy","p":"Adjective","c":[10],"k":1},{"l":"saepe","e":"often","p":"Adverb","c":[7],"k":1},{"l":"saevus, saeva, saevum","e":"savage, cruel","p":"Adjective","c":[11],"k":1},{"l":"salūtō","e":"I greet","p":"Verb","c":[2],"k":1},{"l":"sanguis / sanguinem, m.","e":"blood","p":"Noun","c":[9],"k":1},{"l":"sciō, scīre, scīvī, scītum","e":"to know","p":"Verb","c":[16],"k":1},{"l":"sē","e":"himself, herself, itself, themselves (refers back to the subject of the sentence)","p":"Pronoun","c":[15],"k":1},{"l":"sed","e":"but","p":"Conjunction","c":[2],"k":1},{"l":"sedeō, sedēre","e":"to sit","p":"Verb","c":[6],"k":1},{"l":"semper","e":"always","p":"Adverb","c":[13],"k":1},{"l":"senātor / senātōrem (m.)","e":"senator","p":"Noun","c":[3],"k":1},{"l":"senex / senem, M or F","e":"old person","p":"Noun","c":[8],"k":1},{"l":"sentiō, sentīre, sēnsī, sēnsum","e":"to feel, to notice","p":"Verb","c":[16],"k":1},{"l":"servō, servāre, servāvī, servātus","e":"to save, protect, keep, look after","p":"Verb","c":[12],"k":1},{"l":"servus","e":"slave, enslaved person","p":"Noun","c":[1],"k":1},{"l":"sī","e":"if","p":"Conjunction","c":[16],"k":1},{"l":"silva / silvam F.","e":"a forest","p":"Noun","c":[7],"k":1},{"l":"simulatque","e":"as soon as","p":"Conjunction","c":[15],"k":1},{"l":"sinē (+ ablative)","e":"without","p":"Preposition","c":[16],"k":1},{"l":"sol, solis M","e":"the sun","p":"Noun","c":[17],"k":1},{"l":"sōlus, sōla, sōlum","e":"alone, only, lonely, on one's own","p":"Adjective","c":[11],"k":1},{"l":"spectō","e":"I look at, watch","p":"Verb","c":[2],"k":1},{"l":"statim","e":"immediately, at once","p":"Adverb","c":[9],"k":1},{"l":"stō, stāre","e":"to stand","p":"Verb","c":[6],"k":1},{"l":"stultus, stulta, stultum","e":"stupid","p":"Adjective","c":[12],"k":1},{"l":"sub + ablative or accusative","e":"under","p":"Preposition","c":[10],"k":1},{"l":"subitō","e":"suddenly","p":"Adverb","c":[4],"k":1},{"l":"sum","e":"I am","p":"Verb","c":[1],"k":1},{"l":"summus, summa, summum","e":"highest, greatest, top (of)","p":"Adjective","c":[13],"k":1},{"l":"superō, superāre, superāvī, superātum","e":"to overcome, overpower","p":"Verb","c":[12],"k":1},{"l":"surgō, surgere, surrēxī, surrectum","e":"to get up, to rise","p":"Verb","c":[8],"k":1},{"l":"suus, sua, suum","e":"her, his, its, their (own)","p":"Adjective","c":[13],"k":1},{"l":"taberna, tabernae, f.","e":"a shop, inn","p":"Noun","c":[12],"k":1},{"l":"taceō, tacēre","e":"to be silent","p":"Verb","c":[5],"k":1},{"l":"tamen","e":"however","p":"Conjunction","c":[13],"k":1},{"l":"tandem","e":"at last, finally","p":"Adverb","c":[8],"k":1},{"l":"templum / templum (n.)","e":"temple","p":"Noun","c":[4],"k":1},{"l":"temptō, temptāre","e":"to try","p":"Verb","c":[6],"k":1},{"l":"tempus, temporis (n.)","e":"time","p":"Noun","c":[14],"k":1},{"l":"teneō","e":"I hold","p":"Verb","c":[4],"k":1},{"l":"terra, terrae, f.","e":"ground","p":"Noun","c":[12],"k":1},{"l":"terreō, terrēre, terruī, territus","e":"to frighten","p":"Verb","c":[14],"k":1},{"l":"timeō, timēre","e":"to fear, be afraid of","p":"Verb","c":[5],"k":1},{"l":"tollō","e":"I raise, lift up; pick up","p":"Verb","c":[4],"k":1},{"l":"totus, tota, totum","e":"whole, entire","p":"Adjective","c":[6],"k":1},{"l":"trādō, trādere, trādidī, trāditum","e":"to hand over, hand down","p":"Verb","c":[9],"k":1},{"l":"trahō, trahere, trāxī, tractus","e":"to drag, draw, pull","p":"Verb","c":[12],"k":1},{"l":"trans + acc.","e":"across","p":"Preposition","c":[8],"k":1},{"l":"tristis, tristis, triste","e":"sad","p":"Adjective","c":[6],"k":1},{"l":"tu","e":"you (singular)","p":"Pronoun","c":[1],"k":1},{"l":"tum","e":"at that time, then","p":"Adverb","c":[7],"k":1},{"l":"turba","e":"crowd","p":"Noun","c":[1],"k":1},{"l":"tuus, tua, tuum","e":"your (singular), yours","p":"Adjective","c":[6],"k":1},{"l":"ubi","e":"where? where, when","p":"Adverb","c":[1,11],"k":1},{"l":"unda, undae F","e":"a wave (in the ocean)","p":"Noun","c":[17],"k":1},{"l":"urbs / urbem (f.)","e":"city","p":"Noun","c":[3],"k":1},{"l":"uxor / uxōrem (f.)","e":"wife","p":"Noun","c":[6],"k":1},{"l":"vehementer","e":"loudly, vehemently, strongly","p":"Adverb","c":[7],"k":1},{"l":"vēndō, vēndere","e":"to sell","p":"Verb","c":[5],"k":1},{"l":"veniō, venīre, vēnī, ventum","e":"to come","p":"Verb","c":[4,9],"k":1},{"l":"verbum, verbī N","e":"a word","p":"Noun","c":[14],"k":1},{"l":"via","e":"street, road","p":"Noun","c":[1],"k":1},{"l":"videō","e":"I see","p":"Verb","c":[2],"k":1},{"l":"vīlla, vīllae, f.","e":"a country house, house","p":"Noun","c":[15],"k":1},{"l":"vincō","e":"I win, conquer","p":"Verb","c":[3],"k":1},{"l":"vīnum / vīnum (n.)","e":"wine","p":"Noun","c":[2],"k":1},{"l":"vir / virum, m.","e":"a man","p":"Noun","c":[9],"k":1},{"l":"vīta / vītam, f.","e":"life","p":"Noun","c":[9],"k":1},{"l":"vīvō, vīvere, vīxī","e":"to live, to be alive","p":"Verb","c":[13],"k":1},{"l":"vocō","e":"I call","p":"Verb","c":[2],"k":1},{"l":"volō, velle","e":"to want, be willing","p":"Verb","c":[5],"k":1},{"l":"vōs / vōs","e":"you (plural)","p":"Pronoun","c":[4],"k":1},{"l":"vōx, vōcis, f.","e":"a voice, shout","p":"Noun","c":[12],"k":1}],"full":[{"l":"ab-sum, ab-esse, ā-fuī","e":"to be absent, away","p":"Verb","k":1,"c":[11]},{"l":"ac-cidō, ac-cidere, ac-cidī (ad + cado, cadere, cecidi: fall)","e":"to happen","p":"Verb","k":1,"c":[8,11]},{"l":"ac-cipiō, ac-cipere, ac-cēpī (ad + capiō, capere, cēpī)","e":"to accept, take in, receive; I welcome","p":"Verb","k":1,"c":[4,10]},{"l":"ad-ferō, ad-ferre, at-tulī","e":"to bring","p":"Verb","k":0,"c":[17]},{"l":"ad-iuvō, ad-iuvāre, ad-iūvi, ad-iūtum","e":"to help","p":"Verb","k":0,"c":[5,7,8,10,12]},{"l":"administrō, administrāre","e":"to manage","p":"Verb","k":0,"c":[6]},{"l":"adōrō","e":"I pray to","p":"Verb","k":0,"c":[4]},{"l":"adsum","e":"I am here, I am present","p":"Verb","k":1,"c":[2,3,4]},{"l":"ad-veniō, ad-venīre, ad-vēnī, ad-ventum","e":"to arrive (to come to)","p":"Verb","k":1,"c":[9]},{"l":"aedificō, aedificāre, aedificāvī","e":"to build","p":"Verb","k":0,"c":[3,5,6,7,8,10,17]},{"l":"agitō, agitāre, agitāvī","e":"to spur on; to drive on, to chase; I drive/spur on","p":"Verb","k":0,"c":[3,5,7]},{"l":"agō, agere, ēgī, actum","e":"to do, to act","p":"Verb","k":1,"c":[7,8,13]},{"l":"ambulō","e":"I walk","p":"Verb","k":1,"c":[3]},{"l":"āmittō","e":"I am losing","p":"Verb","k":0,"c":[3]},{"l":"amō, amāre, amāvī, amātus","e":"to love, to like","p":"Verb","k":1,"c":[14]},{"l":"aperiō, aperīre, aperuī","e":"open","p":"Verb","k":0,"c":[5,17]},{"l":"appareō, apparēre, apparui, –","e":"to appear","p":"Verb","k":1,"c":[17]},{"l":"appropinquō, appropinquāre, appropinquāvī","e":"to approach, come near to","p":"Verb","k":1,"c":[5,7]},{"l":"ardeo, ardēre, arsi, arsum","e":"to burn, to be on fire","p":"Verb","k":0,"c":[12]},{"l":"ascendō, ascendere, ascendī","e":"to climb","p":"Verb","k":0,"c":[17]},{"l":"audeō, audēre, (not doing perfect tense for now)","e":"to dare","p":"Verb","k":0,"c":[5,10]},{"l":"audiō, audīre","e":"to hear, listen to","p":"Verb","k":1,"c":[5]},{"l":"au-FERŌ, au-FERRE, abs-TULĪ, ab–LATUM (ab + fero)","e":"to carry off, to steal","p":"Verb","k":1,"c":[16]},{"l":"augeō, augēre, auxī","e":"to make grow","p":"Verb","k":0,"c":[12]},{"l":"bālō","e":"I bleat","p":"Verb","k":0,"c":[4]},{"l":"bellum gero","e":"to wage war","p":"Verb","k":1,"c":[8]},{"l":"bibō, bibere, bibī, –","e":"to drink","p":"Verb","k":1,"c":[6,8]},{"l":"cadō","e":"I fall","p":"Verb","k":1,"c":[2]},{"l":"calcitrābat","e":"was kicking","p":"Verb","k":0,"c":[7]},{"l":"calcō, calcāre, calcāvī","e":"to step on","p":"Verb","k":0,"c":[17]},{"l":"cantō, cantāre","e":"to sing","p":"Verb","k":0,"c":[7]},{"l":"capiō, capere","e":"to take, capture","p":"Verb","k":1,"c":[3,4,6]},{"l":"caveō, cavēre, cāvī","e":"to beware, look out (for), watch out (for)","p":"Verb","k":0,"c":[1,2,4,17]},{"l":"cecidi","e":"fell","p":"Verb","k":0,"c":[7]},{"l":"cēlō, cēlāre, cēlāvī, celātum","e":"to hide","p":"Verb","k":1,"c":[16]},{"l":"cēnō, cēnāre, cēnāvī","e":"to eat dinner","p":"Verb","k":0,"c":[17]},{"l":"circum-spectō, circum-spectāre, circum-spectāvī","e":"to look around","p":"Verb","k":0,"c":[7,17]},{"l":"clāmō","e":"I shout","p":"Verb","k":1,"c":[3]},{"l":"coepī (uses perfect endings)","e":"to begin (can be translated either present or perfect); I began (only perfect forms)","p":"Verb","k":1,"c":[10,11,12,13]},{"l":"cōgitō, cōgitāre, cōgitāvī, cōgitātus","e":"to think, consider","p":"Verb","k":1,"c":[14]},{"l":"cog-nōscō, cog-nōscere, cog-nōvī, cog-nitus","e":"to get to know, find out, learn","p":"Verb","k":1,"c":[15]},{"l":"con-cipio, con-cipere, con-cēpi, conceptum","e":"(cum + capio) to conceive, to get pregnant","p":"Verb","k":0,"c":[10]},{"l":"con-FICIŌ, con-FICere, con-FĒCĪ, con-FECTUS(cum + faciō)","e":"to finish","p":"Verb","k":1,"c":[14]},{"l":"cōn-SPICIŌ, cōn-SPICERE, cōn-SPEXĪ, con-SPECTUM (spicio, spicere, spexi, spectum: to look at)","e":"to catch sight of, to notice; to notice, to glimpse","p":"Verb","k":1,"c":[7,8,17]},{"l":"cōnstituō, cōnstituere, cōnstituī, cōnstitūtus","e":"to decide","p":"Verb","k":1,"c":[8,14]},{"l":"cōnsūmō, cōnsūmere, cōnsūmpsī","e":"to consume, eat","p":"Verb","k":1,"c":[13]},{"l":"conveniō, convenīre","e":"to gather, meet","p":"Verb","k":0,"c":[4,6]},{"l":"corrumpō, corrumpere, corrūpī","e":"to spoil, ruin","p":"Verb","k":0,"c":[17]},{"l":"crēdō, crēdere, crēdidī, crēditum","e":"to believe (takes a dative rather than an accusative direct object); believe/trust (+ dative)","p":"Verb","k":0,"c":[11,16]},{"l":"cupiō, cupere","e":"to want, desire","p":"Verb","k":1,"c":[5]},{"l":"curō, curāre","e":"to take care [of]","p":"Verb","k":0,"c":[4,5,7]},{"l":"currō","e":"I run","p":"Verb","k":1,"c":[2,3]},{"l":"custodiō, custodīre, custodīvī, custodītum","e":"to guard","p":"Verb","k":0,"c":[7,13]},{"l":"dēbeō, dēbēre","e":"to owe; ought (followed by infinitive); ought, should, must","p":"Verb","k":1,"c":[2,5,9,17]},{"l":"de-cido, de-cidere, de-cidi, de-cisum","e":"to fall down (dē + cadō)","p":"Verb","k":0,"c":[12]},{"l":"dēlectō","e":"I please","p":"Verb","k":0,"c":[3]},{"l":"dēleō, dēlēre, dēlēvī, dēlētus","e":"to destroy","p":"Verb","k":1,"c":[8,12]},{"l":"dēpōnō, dēpōnere","e":"to put down","p":"Verb","k":0,"c":[5]},{"l":"dēscendō, dēscendere, dēscendī","e":"to go down, come down","p":"Verb","k":0,"c":[17]},{"l":"dē-sistō, dē-sistere, dē-stiti","e":"to stop","p":"Verb","k":0,"c":[8]},{"l":"devoveo, devovēre, devovī","e":"to curse","p":"Verb","k":0,"c":[10]},{"l":"dīcō","e":"I say","p":"Verb","k":1,"c":[2,3]},{"l":"discēdō, discēdere","e":"to leave, depart","p":"Verb","k":1,"c":[3,6]},{"l":"dō, dare","e":"to give","p":"Verb","k":1,"c":[2,4,5]},{"l":"dormiō","e":"I sleep","p":"Verb","k":1,"c":[1]},{"l":"dubitāvit","e":"hesitated","p":"Verb","k":0,"c":[16]},{"l":"dūcō","e":"I lead","p":"Verb","k":1,"c":[2]},{"l":"effugiō, effugere","e":"to escape","p":"Verb","k":1,"c":[5]},{"l":"ef-fundō, ef-fundere, ef-fūdī","e":"to pour out","p":"Verb","k":0,"c":[17]},{"l":"emō, emere, ēmī, ēmptus","e":"to buy","p":"Verb","k":1,"c":[9,16,17]},{"l":"eō, īre, iī","e":"to go","p":"Verb","k":1,"c":[14,15]},{"l":"equitō, equitāre, equitāvī, equitātum","e":"to ride (a horse)","p":"Verb","k":0,"c":[9]},{"l":"erubescō, erubescēre, erubescui, –","e":"to blush","p":"Verb","k":0,"c":[1,13]},{"l":"es","e":"you are","p":"Verb","k":1,"c":[1]},{"l":"est","e":"he/she/it is; there is","p":"Verb","k":1,"c":[1]},{"l":"ēvānēscere","e":"to disappear","p":"Verb","k":0,"c":[14]},{"l":"excitō, excitāre, excitāvī","e":"to wake someone up","p":"Verb","k":0,"c":[10,11,17]},{"l":"exeō, exīre, exiī","e":"to come out of; to go out","p":"Verb","k":0,"c":[5,17]},{"l":"exspectō, exspectāre","e":"to wait for, expect","p":"Verb","k":1,"c":[6]},{"l":"ex-struō, ex-struere, ex-strūxī","e":"to build","p":"Verb","k":0,"c":[10]},{"l":"extrahere","e":"to drag out","p":"Verb","k":0,"c":[6]},{"l":"faciō, facere","e":"to make, to do; I am doing","p":"Verb","k":1,"c":[3,4,5,6,8]},{"l":"faveō, favēre, fāvī","e":"to favor, support (+ dative)","p":"Verb","k":0,"c":[17]},{"l":"ferō, ferre, tulī","e":"to bring, carry, bear","p":"Verb","k":1,"c":[9,10,14]},{"l":"festīnō","e":"I hurry","p":"Verb","k":1,"c":[2,3,15]},{"l":"fluō, fluere, flūxī, flūxus","e":"to flow","p":"Verb","k":0,"c":[5,9]},{"l":"fugiō, fugere, fūgī","e":"to run away, to flee","p":"Verb","k":1,"c":[8,11]},{"l":"fulgēbat","e":"there was lightning","p":"Verb","k":0,"c":[11]},{"l":"gaudeō, gaudēre, gāvīsus sum","e":"to be pleased, rejoice","p":"Verb","k":0,"c":[16]},{"l":"gerō, gerere, gessī, gestum","e":"to wear","p":"Verb","k":1,"c":[4,8]},{"l":"grundiēbat","e":"was grunting","p":"Verb","k":0,"c":[16]},{"l":"habeō","e":"I have","p":"Verb","k":1,"c":[2]},{"l":"habitō","e":"I live","p":"Verb","k":1,"c":[2]},{"l":"haerēbant","e":"they were clinging; were clinging to","p":"Verb","k":0,"c":[11,16]},{"l":"iaceō, iacēre, iacuī, –","e":"to lie down; to lie flat","p":"Verb","k":1,"c":[5,8]},{"l":"iaciō, iacere, iēcī","e":"to throw","p":"Verb","k":1,"c":[4,9,10]},{"l":"iactō, iactāre, iactāvī","e":"to throw","p":"Verb","k":0,"c":[7,8]},{"l":"ig-nōscō, ig-nōscere, ig-nōvī","e":"to forgive","p":"Verb","k":0,"c":[17]},{"l":"im-pleō, im-plēre, im-plēvī","e":"to fill","p":"Verb","k":0,"c":[9,11,12,17]},{"l":"incendō, incendere, incendī, incensum","e":"to burn, to set on fire","p":"Verb","k":1,"c":[8]},{"l":"incipiō, incipere","e":"to begin","p":"Verb","k":0,"c":[5]},{"l":"incitō, incitāre, incitāvī, incitātus","e":"to stir up","p":"Verb","k":0,"c":[9]},{"l":"indicāre","e":"to point out","p":"Verb","k":0,"c":[13]},{"l":"inquit","e":"he/she says, said","p":"Verb","k":1,"c":[6]},{"l":"īnspiciō, īnspicere, īnspexī","e":"to inspect","p":"Verb","k":0,"c":[17]},{"l":"intellegō, intellegere, intellexi","e":"to understand, realize","p":"Verb","k":1,"c":[8,13]},{"l":"intrō","e":"I enter","p":"Verb","k":1,"c":[2]},{"l":"in-veniō, in-venīre, in-vēnī","e":"to find (come upon)","p":"Verb","k":1,"c":[8,9,11]},{"l":"iubeō, iubēre, iussī","e":"to order","p":"Verb","k":1,"c":[6,15]},{"l":"labōrō","e":"I work","p":"Verb","k":1,"c":[1]},{"l":"lacrimō, lacrimāre, lacrimāvī, lacrimatum","e":"to cry, weep","p":"Verb","k":1,"c":[5,9]},{"l":"lambō, lambere, lambī","e":"to lick","p":"Verb","k":0,"c":[5,6,7,17]},{"l":"laniāvit","e":"tore","p":"Verb","k":0,"c":[13]},{"l":"lātrō, lātrāre, lātrāvi, lātrātus","e":"to bark","p":"Verb","k":0,"c":[6,7,10]},{"l":"laudō","e":"I praise","p":"Verb","k":1,"c":[2,4]},{"l":"lavō, lavāre, lāvī","e":"to wash, soak","p":"Verb","k":0,"c":[17]},{"l":"legō, legere, lēgī, lectum","e":"to choose, to read; to read, to select","p":"Verb","k":1,"c":[1,9,10,16]},{"l":"līberō, līberāre, līberāvī, liberātum","e":"to set free","p":"Verb","k":1,"c":[15,17]},{"l":"luceō, lucēre","e":"to shine","p":"Verb","k":0,"c":[7]},{"l":"lūdō, lūdere, lūsī","e":"to play","p":"Verb","k":0,"c":[5,13]},{"l":"maneō, manēre","e":"to stay, remain","p":"Verb","k":1,"c":[5]},{"l":"meminī","e":"I remember (perfect forms with present meaning)","p":"Verb","k":0,"c":[10]},{"l":"mingō, mingere","e":"to pee","p":"Verb","k":0,"c":[5]},{"l":"mittō, mittere, mīsī, missum","e":"to send","p":"Verb","k":1,"c":[12]},{"l":"moneō, monēre","e":"to advise, warn","p":"Verb","k":0,"c":[6]},{"l":"mūgiō","e":"I moo, bellow","p":"Verb","k":0,"c":[4]},{"l":"mulceō, mulcere","e":"to pat","p":"Verb","k":0,"c":[2,6,10]},{"l":"mūtō, mūtāre, mūtāvī","e":"to change","p":"Verb","k":0,"c":[17]},{"l":"narrō, narrāre, narrāvi, narrātum","e":"to tell, to relate","p":"Verb","k":1,"c":[7]},{"l":"natō, natāre, natāvī, natātus","e":"to swim","p":"Verb","k":0,"c":[8,9]},{"l":"nāvigō, nāvigāre, nāvigāvī","e":"to sail","p":"Verb","k":1,"c":[11]},{"l":"necō, necāre, necāvī, necātus","e":"to kill","p":"Verb","k":1,"c":[4,14]},{"l":"negōtium agere","e":"to do business","p":"Verb","k":0,"c":[5,8]},{"l":"ne-SCIŌ, ne-SCĪRE, ne-SCĪVĪ, ne-scitus","e":"to not know","p":"Verb","k":1,"c":[14]},{"l":"nōbīs obstās","e":"you are in our way","p":"Verb","k":0,"c":[1]},{"l":"nocēre","e":"to harm","p":"Verb","k":0,"c":[15]},{"l":"nōlō, nōlle","e":"to not want, be unwilling","p":"Verb","k":1,"c":[5]},{"l":"nōscere","e":"to know","p":"Verb","k":0,"c":[13]},{"l":"notāre","e":"to brand","p":"Verb","k":0,"c":[6]},{"l":"nubō, nubere, nupsi, nuptum","e":"to marry (literally \"to put on a veil) + dative","p":"Verb","k":0,"c":[16]},{"l":"nūntiō, nūntiāre, nūntiāvī","e":"to announce, report","p":"Verb","k":1,"c":[4,15]},{"l":"ob-stō, ob-stāre, ob-stitī","e":"to stand in the way of (+ dative)","p":"Verb","k":0,"c":[12,13]},{"l":"oc-cīdō, oc-cīdere, oc-cīdī","e":"to kill","p":"Verb","k":1,"c":[8,9,10]},{"l":"of-ferō, of-ferre, ob-tulī, ob-latus (ob + fero, ferre, tuli, latus)","e":"to offer (ob + ferō)","p":"Verb","k":1,"c":[9,12,16]},{"l":"olfaciō, olfacere, olfēcī","e":"to smell (sense by smell)","p":"Verb","k":0,"c":[17]},{"l":"operīre","e":"to cover","p":"Verb","k":0,"c":[13]},{"l":"op-primō, op-primere, op-pressī, op-pressum","e":"to press down, to repress, oppress","p":"Verb","k":0,"c":[8,9]},{"l":"op-pugnō, op-pugnāre, op-pugnāvī, op-pugnātum (ob + pugnō)","e":"to attack","p":"Verb","k":1,"c":[17]},{"l":"ōrō, ōrāre, ōrāvī, ōrātum","e":"to beg, beg for","p":"Verb","k":1,"c":[5,11,16]},{"l":"ostendō, ostendere, ostendī, ostensus","e":"to show","p":"Verb","k":1,"c":[14]},{"l":"parcō, parcere, pepercī","e":"to spare, be merciful to (+ dative)","p":"Verb","k":0,"c":[9]},{"l":"pāreō, pārēre, pāruī","e":"to obey","p":"Verb","k":0,"c":[17]},{"l":"parō, parāre, parāvī","e":"to prepare","p":"Verb","k":1,"c":[9,13]},{"l":"partiebantur","e":"were sharing","p":"Verb","k":0,"c":[13]},{"l":"per-cutiō, per-cutere, per-cussī","e":"to strike hard","p":"Verb","k":0,"c":[4,10,11,12]},{"l":"per-eō, per-īre, per-iī","e":"to die (literally \"to go through\")","p":"Verb","k":1,"c":[9,10]},{"l":"pervenīre","e":"to arrive, reach","p":"Verb","k":0,"c":[13]},{"l":"petō, petere, petīvī, petitum","e":"to attack; seek, beg, ask for","p":"Verb","k":1,"c":[9]},{"l":"plaudō","e":"I clap, applaud","p":"Verb","k":0,"c":[3]},{"l":"pluēbat","e":"was raining","p":"Verb","k":0,"c":[11]},{"l":"poenās dare","e":"to pay the penalty, to be punished","p":"Verb","k":0,"c":[5]},{"l":"pōnō, pōnere, posuī","e":"to put, place","p":"Verb","k":0,"c":[17]},{"l":"portō, portāre","e":"to carry","p":"Verb","k":1,"c":[2,3,4,5]},{"l":"possum, posse","e":"to be able, can","p":"Verb","k":1,"c":[5]},{"l":"postulō, postulāre, postulāvī","e":"to demand","p":"Verb","k":0,"c":[6,17]},{"l":"praebeō, praebēre, praebuī, praebitus","e":"to provide","p":"Verb","k":1,"c":[17]},{"l":"prō-CĒDŌ, prō-CĒDERE, prō-CESSI, prō-CESSUM (cedo, cedere, cessi, cessum: to go)","e":"to go forward, to proceed; to go along, advance, proceed","p":"Verb","k":1,"c":[3,6,8]},{"l":"prō-mittō, prō-mittere, prō-misi","e":"to promise","p":"Verb","k":0,"c":[10]},{"l":"prōtegō, prōtegere, prōtēxī","e":"to protect","p":"Verb","k":0,"c":[5,12,17]},{"l":"pugnō, pugnāre, pugnāvī","e":"to fight","p":"Verb","k":1,"c":[5,7]},{"l":"pulsō, pulsāre","e":"to hit","p":"Verb","k":0,"c":[6]},{"l":"pūniō, pūnīre, pūnīvī","e":"to punish","p":"Verb","k":0,"c":[17]},{"l":"putō, putāre, putāvī","e":"to think (that…), to have an opinion","p":"Verb","k":1,"c":[15]},{"l":"quaerō","e":"I look for, search for","p":"Verb","k":1,"c":[2]},{"l":"quiēscō, quiēscere, quiēvi","e":"to rest","p":"Verb","k":0,"c":[17]},{"l":"rapiō, rapere, rapuī, raptum","e":"to seize, to grab, to steal","p":"Verb","k":1,"c":[16]},{"l":"re-d-eō, re-d-īre, re-d-iī, re-d-itus","e":"to go back, come back, return; to go back (compounded from eo, īre, which is irregular and on the back wall in the classroom)","p":"Verb","k":1,"c":[10,12]},{"l":"re-ferō, re-ferre, ret-tulī","e":"to carry back; report","p":"Verb","k":0,"c":[17]},{"l":"reficiō, reficere","e":"to fix","p":"Verb","k":0,"c":[6]},{"l":"regō","e":"I rule","p":"Verb","k":0,"c":[4,8]},{"l":"relinquō, relinquere, relīquī, relictus","e":"to leave behind","p":"Verb","k":1,"c":[13,14,17]},{"l":"rēpsit","e":"crept","p":"Verb","k":0,"c":[16]},{"l":"re-SISTŌ, re-SISTERE, re-STITĪ, – (re + relative of sto, stare)","e":"to resist (+ dative)","p":"Verb","k":1,"c":[16]},{"l":"respondeō, respondēre","e":"to reply, answer","p":"Verb","k":1,"c":[5]},{"l":"re-tineō, re-tinēre, re-tinui","e":"to hold back (re + teneō)","p":"Verb","k":0,"c":[3,9]},{"l":"re-VENIŌ, re-VENĪRE, re-VĒNĪ, re-VENTUM","e":"to come back, to return","p":"Verb","k":1,"c":[16]},{"l":"rīdeō","e":"I laugh, smile","p":"Verb","k":1,"c":[1]},{"l":"rogō, rogāre","e":"to ask","p":"Verb","k":1,"c":[5,6,14]},{"l":"ruō, ruere, ruī","e":"to rush","p":"Verb","k":0,"c":[12,16]},{"l":"saliō, salīre, saluī, saltum","e":"to jump, to leap","p":"Verb","k":0,"c":[5,6,8,9]},{"l":"salūtō","e":"I greet","p":"Verb","k":1,"c":[2]},{"l":"sciō, scīre, scīvī, scītum","e":"to know","p":"Verb","k":1,"c":[14,16]},{"l":"scrībō, scrībere","e":"to write","p":"Verb","k":0,"c":[6]},{"l":"sēdāvit","e":"settled down","p":"Verb","k":0,"c":[11]},{"l":"sedeō, sedēre","e":"to sit","p":"Verb","k":1,"c":[3,6]},{"l":"sentiō, sentīre, sēnsī, sēnsum","e":"to feel, to notice; to perceive","p":"Verb","k":1,"c":[10,15,16]},{"l":"servō, servāre, servāvī, servātus","e":"to save, protect, keep, look after","p":"Verb","k":1,"c":[9,10,12]},{"l":"soleō, solēre","e":"to be accustomed; I am accustomed, used","p":"Verb","k":0,"c":[5]},{"l":"sopōrāvī","e":"drugged/put to sleep","p":"Verb","k":0,"c":[10]},{"l":"spargō","e":"I spray","p":"Verb","k":0,"c":[4]},{"l":"spectō","e":"I look at, watch","p":"Verb","k":1,"c":[2]},{"l":"spirō, spirāre, spirāvī, spirātus","e":"to breathe","p":"Verb","k":0,"c":[13]},{"l":"stō, stāre","e":"to stand","p":"Verb","k":1,"c":[5,6]},{"l":"sub-veniō, sub-venīre, sub-vēnī","e":"to help, support","p":"Verb","k":0,"c":[9]},{"l":"sum","e":"I am","p":"Verb","k":1,"c":[1]},{"l":"superō, superāre, superāvī, superātum","e":"to overcome, overpower","p":"Verb","k":1,"c":[8,12]},{"l":"surgō, surgere, surrēxī, surrectum","e":"to get up, to rise","p":"Verb","k":1,"c":[5,6,8]},{"l":"susurrō, susurrāre, susurrāvī, susurrātum","e":"to whisper","p":"Verb","k":0,"c":[5,8,13]},{"l":"taceō, tacēre","e":"to be silent; I am silent","p":"Verb","k":1,"c":[3,5,14]},{"l":"temptō, temptāre","e":"to try (+ infinitive)","p":"Verb","k":1,"c":[5,6,8,12,17]},{"l":"teneō","e":"I hold","p":"Verb","k":1,"c":[2,4,6]},{"l":"terreō, terrēre, terruī, territus","e":"to frighten","p":"Verb","k":1,"c":[14]},{"l":"timeō, timēre","e":"to fear, be afraid of","p":"Verb","k":1,"c":[4,5]},{"l":"tollō","e":"I raise, lift up; pick up","p":"Verb","k":1,"c":[3,4]},{"l":"tonābat","e":"thundered","p":"Verb","k":0,"c":[11]},{"l":"torquēre","e":"to torture","p":"Verb","k":0,"c":[6]},{"l":"trādō, trādere, trādidī, trāditum","e":"to hand over, hand down","p":"Verb","k":1,"c":[2,8,9]},{"l":"trahō, trahere, trāxī, tractus","e":"to drag, draw, pull","p":"Verb","k":1,"c":[8,12]},{"l":"trānsīre","e":"to go cross","p":"Verb","k":0,"c":[14]},{"l":"vēndō, vēndere","e":"to sell","p":"Verb","k":1,"c":[2,5]},{"l":"veniō, venīre, vēnī, ventum","e":"to come","p":"Verb","k":1,"c":[2,4,9]},{"l":"verberō, verberāre, verberāvi, verberātum","e":"to beat","p":"Verb","k":0,"c":[2,12]},{"l":"videō","e":"I see","p":"Verb","k":1,"c":[2]},{"l":"vincō","e":"I win, conquer","p":"Verb","k":1,"c":[3]},{"l":"vītam agere","e":"to live life","p":"Verb","k":0,"c":[14]},{"l":"vītāvit","e":"avoided","p":"Verb","k":0,"c":[7]},{"l":"vituperō, vituperāre","e":"to scold","p":"Verb","k":0,"c":[2,5]},{"l":"vīvō, vīvere, vīxī","e":"to live, to be alive","p":"Verb","k":1,"c":[6,13]},{"l":"vocō","e":"I call","p":"Verb","k":1,"c":[2,7]},{"l":"volitō, volitāre","e":"to fly","p":"Verb","k":0,"c":[2,4,6]},{"l":"volō, velle","e":"to want, be willing","p":"Verb","k":1,"c":[5,13,14]},{"l":"vulnerō, vulnerāre, vulnerāvī","e":"to wound","p":"Verb","k":0,"c":[7]},{"l":"aestus, aestūs M","e":"heat","p":"Noun","k":0,"c":[12]},{"l":"ager / agrum M","e":"a field","p":"Noun","k":0,"c":[8]},{"l":"agricola / agricolam (m.)","e":"farmer","p":"Noun","k":0,"c":[6,8]},{"l":"amīcitia, amīcitiae, f.","e":"friendship","p":"Noun","k":0,"c":[17]},{"l":"amīcus / amīcum (m.)","e":"friend","p":"Noun","k":1,"c":[3]},{"l":"amita / amitam (f.)","e":"aunt","p":"Noun","k":0,"c":[5,11,16]},{"l":"amor, amōris (m.)","e":"love","p":"Noun","k":1,"c":[14]},{"l":"amphora, amphorae, f.","e":"amphora, big jar","p":"Noun","k":0,"c":[17]},{"l":"ancilla / ancillam (f.)","e":"enslaved woman, female slave; female enslaved person","p":"Noun","k":1,"c":[2,3]},{"l":"animal / animal (n.)","e":"animal","p":"Noun","k":1,"c":[4]},{"l":"animus, animī, m.","e":"mind, spirit","p":"Noun","k":0,"c":[17]},{"l":"annus / annum, m.","e":"a year","p":"Noun","k":1,"c":[10]},{"l":"anser, anseris M","e":"goose","p":"Noun","k":0,"c":[13]},{"l":"ānulō","e":"ring","p":"Noun","k":0,"c":[16]},{"l":"aqua / aquam (f.)","e":"water","p":"Noun","k":1,"c":[5]},{"l":"āra / āram (f.)","e":"altar","p":"Noun","k":0,"c":[4,5,9,16]},{"l":"arānea, arāneae, f.","e":"cobweb","p":"Noun","k":0,"c":[17]},{"l":"arca, arcae, f.","e":"box","p":"Noun","k":0,"c":[17]},{"l":"arcus / arcum M","e":"an arch","p":"Noun","k":0,"c":[8]},{"l":"arōma, arōmatis, n.","e":"spice","p":"Noun","k":0,"c":[17]},{"l":"artifex / artificis M or F","e":"a craftsperson","p":"Noun","k":0,"c":[7,11]},{"l":"as, assis, m.","e":"as (copper coin of small value)","p":"Noun","k":0,"c":[17]},{"l":"asinus / asinum (m.)","e":"donkey","p":"Noun","k":0,"c":[4,17]},{"l":"aspectum","e":"view","p":"Noun","k":0,"c":[2]},{"l":"ātrium, ātriī, n.","e":"a reception room, entrance hall","p":"Noun","k":0,"c":[17]},{"l":"aurīga","e":"charioteer","p":"Noun","k":0,"c":[3]},{"l":"auris, auris F","e":"ear","p":"Noun","k":0,"c":[12]},{"l":"auxiliaris / auxiliarem M","e":"an auxiliary soldier","p":"Noun","k":0,"c":[9]},{"l":"auxilium / auxilium N","e":"help (as a noun)","p":"Noun","k":0,"c":[9,15]},{"l":"avis / avem M","e":"a bird","p":"Noun","k":0,"c":[7]},{"l":"barba","e":"beard","p":"Noun","k":0,"c":[11]},{"l":"basilicam","e":"public building","p":"Noun","k":0,"c":[2]},{"l":"bellum, bellī, n.","e":"a war","p":"Noun","k":1,"c":[15]},{"l":"bracchium","e":"arm","p":"Noun","k":0,"c":[16]},{"l":"caedēs /caedem F","e":"slaughter, murder; slaughter, killing","p":"Noun","k":0,"c":[9]},{"l":"caelum, caelī, n.","e":"sky, heaven","p":"Noun","k":1,"c":[4,12]},{"l":"canis / canem","e":"dog","p":"Noun","k":0,"c":[2]},{"l":"caput / caput (n.)","e":"head","p":"Noun","k":1,"c":[2,4,6,12]},{"l":"carcer / carcerem (m.)","e":"prison","p":"Noun","k":0,"c":[6]},{"l":"casa / casam","e":"hut, cottage","p":"Noun","k":0,"c":[8]},{"l":"casus / casum M","e":"an accident","p":"Noun","k":0,"c":[10]},{"l":"cautērium / cautērium (n.)","e":"branding iron","p":"Noun","k":0,"c":[6]},{"l":"cella, cellae, f.","e":"a room","p":"Noun","k":0,"c":[17]},{"l":"cēna, cēnae, f.","e":"a dinner, meal","p":"Noun","k":1,"c":[15]},{"l":"centurio / centurionem M","e":"\"centurion,\" army officer","p":"Noun","k":0,"c":[9]},{"l":"cibus / cibum (m.)","e":"food","p":"Noun","k":1,"c":[2]},{"l":"cicātrīcem","e":"a scar","p":"Noun","k":0,"c":[7]},{"l":"cīvis / cīvem m. or f.","e":"a citizen","p":"Noun","k":1,"c":[9]},{"l":"clāmor / clāmōrem (m.)","e":"shout, noise","p":"Noun","k":1,"c":[2,3,7]},{"l":"clangor, clangoris M","e":"noise","p":"Noun","k":0,"c":[13]},{"l":"cloāca / cloācam (f.)","e":"sewer","p":"Noun","k":0,"c":[5]},{"l":"colōnia / colōniam F","e":"a colony","p":"Noun","k":0,"c":[8]},{"l":"columba / columbam (f.)","e":"a dove (used here as a term of endearment); a dove (also a term of endearment)","p":"Noun","k":0,"c":[6,9,10]},{"l":"com-ēs, com-itis, m.f.","e":"a comrade, companion","p":"Noun","k":1,"c":[6,15]},{"l":"coniūrātiō","e":"plot","p":"Noun","k":0,"c":[14]},{"l":"cōnsilium, cōnsiliī N","e":"a plan","p":"Noun","k":1,"c":[8,14]},{"l":"cōnsul / cōnsulem (m.)","e":"consul","p":"Noun","k":0,"c":[6]},{"l":"controversia, controversiae F","e":"disagreement, quarrel","p":"Noun","k":0,"c":[8]},{"l":"copiae / copias F Pl.","e":"troops","p":"Noun","k":0,"c":[9]},{"l":"corpus, corporis, n.","e":"a body","p":"Noun","k":1,"c":[6,12]},{"l":"cucumerēs","e":"cucumbers","p":"Noun","k":0,"c":[7]},{"l":"culīna, culīnae, f.","e":"kitchen","p":"Noun","k":0,"c":[17]},{"l":"culter / cultrum (m.)","e":"knife","p":"Noun","k":0,"c":[4]},{"l":"cunīculōs","e":"rabbits","p":"Noun","k":0,"c":[7]},{"l":"cūrātor","e":"manager","p":"Noun","k":0,"c":[14]},{"l":"cūria","e":"Senate House","p":"Noun","k":0,"c":[2]},{"l":"cursus","e":"race","p":"Noun","k":0,"c":[3]},{"l":"custōs / custōdem (m./f.)","e":"guard","p":"Noun","k":1,"c":[5]},{"l":"dea / deam, f.","e":"a goddess","p":"Noun","k":1,"c":[10]},{"l":"denarius / denarium M","e":"a Roman coin","p":"Noun","k":0,"c":[9,10]},{"l":"deus / deum (m.)","e":"god","p":"Noun","k":1,"c":[4]},{"l":"diēs / diem (m.)","e":"day","p":"Noun","k":1,"c":[6]},{"l":"diēs nūptiālis","e":"wedding day","p":"Noun","k":0,"c":[16]},{"l":"dispēnsātor, dispēnsātōris, m.","e":"housekeeper, supervisor","p":"Noun","k":0,"c":[17]},{"l":"dolor / dolorem (m.)","e":"pain","p":"Noun","k":0,"c":[6,10,12]},{"l":"domina / dominam, f.","e":"a mistress, lady","p":"Noun","k":1,"c":[9]},{"l":"dominus / dominum (m.)","e":"master, enslaver","p":"Noun","k":1,"c":[2,4]},{"l":"domus / domum F.","e":"a house, a home","p":"Noun","k":1,"c":[6,8]},{"l":"dōnum / dōnum (n.)","e":"gift","p":"Noun","k":1,"c":[4]},{"l":"dux, ducis M","e":"a leader","p":"Noun","k":1,"c":[11]},{"l":"emblēma, emblēmatis, n.","e":"a mosaic","p":"Noun","k":0,"c":[13,17]},{"l":"epistula / epistulam (f.)","e":"a letter (that you send someone, not a letter of the alphabet)","p":"Noun","k":1,"c":[6,7,13,17]},{"l":"equitem","e":"horseman","p":"Noun","k":0,"c":[10]},{"l":"equus / equum (m.)","e":"horse","p":"Noun","k":1,"c":[2,3]},{"l":"exercitus / exercitum M","e":"an army","p":"Noun","k":0,"c":[9]},{"l":"extum / extum (n.)","e":"entrails","p":"Noun","k":0,"c":[4]},{"l":"faber / fabrum","e":"a craftsman","p":"Noun","k":0,"c":[10]},{"l":"fabula, fabulae F","e":"story or play","p":"Noun","k":0,"c":[13]},{"l":"familia, familiae, f.","e":"family, household","p":"Noun","k":0,"c":[17]},{"l":"fār / fār (n.)","e":"grain","p":"Noun","k":0,"c":[4]},{"l":"faucēs, faucium, f.","e":"entrance, entry passage","p":"Noun","k":0,"c":[17]},{"l":"fax / facem (f.)","e":"torch","p":"Noun","k":0,"c":[4,16]},{"l":"febris / febrem (f.)","e":"fever","p":"Noun","k":0,"c":[5]},{"l":"fēmina, fēminae F","e":"a woman","p":"Noun","k":1,"c":[14]},{"l":"fenestra / fenestram (f.)","e":"window","p":"Noun","k":0,"c":[4]},{"l":"ferrarius / ferrarium M","e":"a metalworker; iron worker","p":"Noun","k":0,"c":[7,16]},{"l":"fervor","e":"heat","p":"Noun","k":0,"c":[12]},{"l":"fībulam","e":"a pin","p":"Noun","k":0,"c":[11]},{"l":"fīlia / fīliam (f.)","e":"daughter","p":"Noun","k":1,"c":[2]},{"l":"fīlius / fīlium (m.)","e":"son","p":"Noun","k":1,"c":[2]},{"l":"fīnis / fīnem (m./f.)","e":"end","p":"Noun","k":0,"c":[5,6]},{"l":"fistula, fistulae, f.","e":"a pipe","p":"Noun","k":0,"c":[17]},{"l":"flammeum, flammeī, n.","e":"orange bridal veil","p":"Noun","k":0,"c":[16]},{"l":"flumen, fluminis N","e":"a river","p":"Noun","k":1,"c":[6,9,11,12]},{"l":"focus / focum (m.)","e":"hearth (the floor of a fireplace)","p":"Noun","k":0,"c":[4]},{"l":"fōns / fontem (m.)","e":"fountain; a spring (where water comes out of the ground)","p":"Noun","k":0,"c":[5,6,10,17]},{"l":"forma / formam F","e":"shape, creature","p":"Noun","k":0,"c":[7]},{"l":"fornāx / fornācem (f.)","e":"furnace","p":"Noun","k":0,"c":[5]},{"l":"forum / forum (n.)","e":"forum, marketplace","p":"Noun","k":1,"c":[2]},{"l":"fragor / fragorem M","e":"crashing sound (of something breaking); crashing noise","p":"Noun","k":0,"c":[7,8,10,11]},{"l":"frāter","e":"brother","p":"Noun","k":1,"c":[1]},{"l":"frūctus","e":"fruit","p":"Noun","k":0,"c":[7]},{"l":"frūgēs","e":"crops","p":"Noun","k":0,"c":[7]},{"l":"fullō, fullōnis, m.","e":"fuller, laundry manager","p":"Noun","k":0,"c":[17]},{"l":"fullōnica, fullōnicae, f.","e":"fullery, laundry","p":"Noun","k":0,"c":[17]},{"l":"fundus / fundum (m.)","e":"a farm","p":"Noun","k":0,"c":[5,15]},{"l":"funis, funis M","e":"rope","p":"Noun","k":0,"c":[12]},{"l":"garum, garī, n.","e":"garum (fermented fish sauce)","p":"Noun","k":0,"c":[17]},{"l":"gaudium / gaudium (n.)","e":"joy","p":"Noun","k":0,"c":[4]},{"l":"gens / gentem F","e":"tribe","p":"Noun","k":0,"c":[10]},{"l":"gladius / gladium (m.)","e":"sword","p":"Noun","k":1,"c":[3]},{"l":"glīrēs","e":"dormice","p":"Noun","k":0,"c":[15]},{"l":"gradus","e":"step, row","p":"Noun","k":0,"c":[13]},{"l":"grātiae, grātiārum, f.","e":"thanks","p":"Noun","k":0,"c":[17]},{"l":"hasta / hastam F","e":"a spear","p":"Noun","k":0,"c":[9]},{"l":"hiems, hiemis F","e":"winter","p":"Noun","k":0,"c":[8]},{"l":"hinnītus","e":"neighing","p":"Noun","k":0,"c":[12]},{"l":"homō / hominem M.","e":"a human being, person","p":"Noun","k":1,"c":[6,7]},{"l":"hōra","e":"hour","p":"Noun","k":1,"c":[1]},{"l":"hortus, hortī, m.","e":"a garden","p":"Noun","k":1,"c":[15]},{"l":"hospitem","e":"guest","p":"Noun","k":0,"c":[13]},{"l":"hostis / hostem, m.","e":"an enemy","p":"Noun","k":1,"c":[9]},{"l":"iānitor, iānitōris, m.","e":"a doorkeeper","p":"Noun","k":0,"c":[17]},{"l":"iānua, iānuae, f.","e":"a door, doorway","p":"Noun","k":1,"c":[2,6,12,16]},{"l":"ientāculum, ientāculi, n.","e":"breakfast","p":"Noun","k":0,"c":[17]},{"l":"ignis / ignem (m.)","e":"fire","p":"Noun","k":0,"c":[4]},{"l":"imāgō, imāginis, f.","e":"image, picture","p":"Noun","k":0,"c":[17]},{"l":"imperātor / imperātōrem m.","e":"an emperor, general","p":"Noun","k":1,"c":[3,4,9]},{"l":"imperium, imperiī N.","e":"empire, power","p":"Noun","k":1,"c":[16]},{"l":"impluvium, impluviī, n.","e":"impluvium (pool in the atrium for rainwater)","p":"Noun","k":0,"c":[17]},{"l":"incendium / incendium (n.)","e":"fire","p":"Noun","k":0,"c":[4,12]},{"l":"inertia","e":"inactivity","p":"Noun","k":0,"c":[12]},{"l":"īnstitōrēs","e":"stall-holders","p":"Noun","k":0,"c":[7]},{"l":"īnsula / īnsulam F.","e":"an island or apartment building","p":"Noun","k":1,"c":[1,2,7]},{"l":"iter / iter, n.","e":"a journey, route, way","p":"Noun","k":1,"c":[6,8,9]},{"l":"iuvenis / iuvenem (m./f.)","e":"young person, young man","p":"Noun","k":1,"c":[1,5]},{"l":"labor, labōris, m.","e":"work","p":"Noun","k":1,"c":[6,13]},{"l":"lacrima / lacrimam (f.)","e":"tear (from crying)","p":"Noun","k":0,"c":[5]},{"l":"lacus, lacūs, m.","e":"tub, basin (it's real meaning is \"lake\")","p":"Noun","k":0,"c":[17]},{"l":"laena / laenam F","e":"a wool cloak","p":"Noun","k":0,"c":[7]},{"l":"larārium, larāriī, n.","e":"a lararium (shrine to the household gods)","p":"Noun","k":0,"c":[17]},{"l":"laterēs","e":"bricks","p":"Noun","k":0,"c":[16]},{"l":"latrōnēs","e":"robbers","p":"Noun","k":0,"c":[11]},{"l":"lectus / lectum (m.)","e":"bed","p":"Noun","k":0,"c":[6,10]},{"l":"lēgātus / lēgātum (m.)","e":"governor; commander","p":"Noun","k":0,"c":[6,16]},{"l":"lepus, leporis M","e":"darling; rabbit (a term of endearment)","p":"Noun","k":0,"c":[13,16]},{"l":"līber / līberum (m.)","e":"child","p":"Noun","k":0,"c":[6]},{"l":"liber / librum (m.)","e":"book","p":"Noun","k":0,"c":[6]},{"l":"līberī / līberōs, m., only used in plural (Don't confuse with liber, libri M: book)","e":"children","p":"Noun","k":1,"c":[9]},{"l":"līberta, lībertae, f.","e":"a freedwoman, former slave","p":"Noun","k":0,"c":[17]},{"l":"lībertas / lībertatem (f.)","e":"freedom","p":"Noun","k":0,"c":[6]},{"l":"lībertus, lībertī, m.","e":"a freedman, former slave; former slave/freedman","p":"Noun","k":1,"c":[6,15]},{"l":"lignum / lignum (n.)","e":"piece of wood","p":"Noun","k":0,"c":[5,10]},{"l":"locus / locum, m.","e":"a place","p":"Noun","k":1,"c":[10]},{"l":"lucerna / lucernam (f.)","e":"lamp","p":"Noun","k":0,"c":[4]},{"l":"lūna","e":"the moon","p":"Noun","k":0,"c":[11]},{"l":"lūx, lūcis F.","e":"light (opp. of darkness)","p":"Noun","k":1,"c":[16]},{"l":"mālum / mālum N","e":"an apple","p":"Noun","k":0,"c":[7]},{"l":"manus, manūs, f.","e":"hand","p":"Noun","k":0,"c":[10,11,16]},{"l":"mappa","e":"signal cloth","p":"Noun","k":0,"c":[3]},{"l":"mare, maris N","e":"sea","p":"Noun","k":1,"c":[11]},{"l":"marītus / marītum (m.)","e":"husband","p":"Noun","k":1,"c":[2,6]},{"l":"māter / mātrem (f.)","e":"mother","p":"Noun","k":1,"c":[6]},{"l":"mātrimōnium, mātrimōniī, n.","e":"marriage","p":"Noun","k":0,"c":[16]},{"l":"mātrōna / mātrōnam (f.)","e":"ladies; lady, married woman","p":"Noun","k":0,"c":[3,4,17]},{"l":"mendicus / mendicum M","e":"a person begging for money; beggar","p":"Noun","k":0,"c":[1,9]},{"l":"mēnsa, mēnsae, f.","e":"a table","p":"Noun","k":0,"c":[17]},{"l":"mensis, mensis","e":"month","p":"Noun","k":0,"c":[13]},{"l":"menta","e":"mint","p":"Noun","k":0,"c":[7]},{"l":"mercātor","e":"merchant","p":"Noun","k":0,"c":[2]},{"l":"miles / militem M.","e":"a soldier","p":"Noun","k":1,"c":[7]},{"l":"ministra","e":"employee, assistant","p":"Noun","k":0,"c":[14]},{"l":"mōmentum","e":"importance","p":"Noun","k":0,"c":[14]},{"l":"monētam","e":"the mint","p":"Noun","k":0,"c":[15]},{"l":"mōns, montis (m.)","e":"mountain","p":"Noun","k":1,"c":[14]},{"l":"monstrum / monstrum (n.)","e":"monster","p":"Noun","k":0,"c":[4,7]},{"l":"mora","e":"berries","p":"Noun","k":0,"c":[13]},{"l":"mors, mortis (f.)","e":"death","p":"Noun","k":1,"c":[14]},{"l":"mūrus, mūrī, m.","e":"a wall","p":"Noun","k":1,"c":[10,13]},{"l":"mūs / mūrem (m./f.)","e":"mouse","p":"Noun","k":0,"c":[6]},{"l":"nāsus, nāsī, m.","e":"nose","p":"Noun","k":0,"c":[7,17]},{"l":"naufragium","e":"a crash","p":"Noun","k":0,"c":[3]},{"l":"nauta / nautam M.","e":"a sailor","p":"Noun","k":1,"c":[7,12]},{"l":"navis, navis F","e":"a ship","p":"Noun","k":1,"c":[11]},{"l":"nebula / nebulam F","e":"mist","p":"Noun","k":0,"c":[10]},{"l":"negōtiātor / negōtiātōrem (m.)","e":"businessman","p":"Noun","k":0,"c":[6,7]},{"l":"nihil N","e":"nothing","p":"Noun","k":1,"c":[8]},{"l":"nōmen, nōminis, n.","e":"a name","p":"Noun","k":1,"c":[6,13]},{"l":"nox / noctem (f.)","e":"night","p":"Noun","k":1,"c":[2,5]},{"l":"nūmen / nūmen (n.)","e":"deity; a divinity","p":"Noun","k":0,"c":[4,9]},{"l":"nūntius / nūntium, m.","e":"a messenger; message, news","p":"Noun","k":1,"c":[9]},{"l":"nūptiae, nūptiārum, f.","e":"wedding","p":"Noun","k":0,"c":[16]},{"l":"operārius / operārium M","e":"a worker; a workman","p":"Noun","k":0,"c":[10,11]},{"l":"oppidō Conimbrīgā","e":"a town in Lusitania","p":"Noun","k":0,"c":[16]},{"l":"oppidum / oppidum N","e":"a town","p":"Noun","k":0,"c":[9]},{"l":"os, oris N","e":"mouth","p":"Noun","k":0,"c":[13]},{"l":"ōsculum, ōsculī, n.","e":"a kiss","p":"Noun","k":0,"c":[10,13,16]},{"l":"palmam","e":"palm branch","p":"Noun","k":0,"c":[3]},{"l":"palūs / palūdem F","e":"swamp","p":"Noun","k":0,"c":[10]},{"l":"pānis, pānis, m.","e":"bread","p":"Noun","k":0,"c":[17]},{"l":"pantomimus, pantomimi M","e":"a mime performer","p":"Noun","k":0,"c":[13]},{"l":"pars / partem F.","e":"a part","p":"Noun","k":1,"c":[7]},{"l":"pater","e":"father","p":"Noun","k":1,"c":[1]},{"l":"pavīmentum, pavīmentī, n.","e":"floor","p":"Noun","k":0,"c":[12,17]},{"l":"pāx / pacem, f.","e":"peace","p":"Noun","k":1,"c":[8,10]},{"l":"pectus / pectus N","e":"chest (stem pector-)","p":"Noun","k":0,"c":[9]},{"l":"pecūnia / pecūniam (f.)","e":"money","p":"Noun","k":1,"c":[2]},{"l":"pēnsiō / pēnsiōnem (f.)","e":"payment, rent","p":"Noun","k":0,"c":[2,6]},{"l":"perīculum / perīculum (n.)","e":"danger","p":"Noun","k":1,"c":[4]},{"l":"peristȳlium, peristȳliī, n.","e":"peristyle (courtyard surrounded by columns)","p":"Noun","k":0,"c":[17]},{"l":"persona, personae","e":"a character","p":"Noun","k":0,"c":[13]},{"l":"pilum / pilum N","e":"a javelin","p":"Noun","k":0,"c":[9]},{"l":"piscis, piscis, m.","e":"a fish","p":"Noun","k":0,"c":[17]},{"l":"pistor, pistōris, m","e":"a baker","p":"Noun","k":0,"c":[13,17]},{"l":"pistrīnum, pistrīnī, n.","e":"a bakery","p":"Noun","k":0,"c":[13,17]},{"l":"plaustrum / plaustrum N","e":"a wagon; cart","p":"Noun","k":0,"c":[10,14]},{"l":"plūs, plūris, n.","e":"more","p":"Noun","k":0,"c":[14,17]},{"l":"pōculum, pōculī, n.","e":"a cup","p":"Noun","k":0,"c":[16,17]},{"l":"pompa / pompam (f.)","e":"procession","p":"Noun","k":0,"c":[4]},{"l":"pons / pontem M","e":"a bridge","p":"Noun","k":0,"c":[7,8,9]},{"l":"popīna, popīnae, f.","e":"bar","p":"Noun","k":0,"c":[17]},{"l":"popīnāria, popīnāriae, f.","e":"barkeeper, bar owner","p":"Noun","k":0,"c":[3,17]},{"l":"porcus, porcī, m.","e":"pig","p":"Noun","k":0,"c":[16]},{"l":"porta / portam F.","e":"gate","p":"Noun","k":1,"c":[8]},{"l":"portus, portūs, m.","e":"harbor; port","p":"Noun","k":0,"c":[11,17]},{"l":"praemium, praemiī, n.","e":"a prize, reward, profit","p":"Noun","k":1,"c":[4,9,10,13]},{"l":"precēs, precum, f.","e":"prayers","p":"Noun","k":0,"c":[16]},{"l":"prīnceps, prīncipis M.","e":"chief, emperor; chief, person in charge","p":"Noun","k":1,"c":[8,16]},{"l":"procurator / procuratorem M","e":"government official","p":"Noun","k":0,"c":[9]},{"l":"proelium, proeliī, n.","e":"a battle","p":"Noun","k":0,"c":[9,15,17]},{"l":"prūna","e":"plums","p":"Noun","k":0,"c":[7]},{"l":"psittacus / psittacum M","e":"parrot","p":"Noun","k":0,"c":[8]},{"l":"puella / puellam (f.)","e":"girl","p":"Noun","k":1,"c":[3,4]},{"l":"puer / puerum M.","e":"a boy","p":"Noun","k":1,"c":[7]},{"l":"pugiō","e":"dagger","p":"Noun","k":0,"c":[10]},{"l":"quadrīga","e":"chariot","p":"Noun","k":0,"c":[3]},{"l":"rēgīna, rēgīnae F.","e":"queen","p":"Noun","k":1,"c":[16]},{"l":"regnum / regnum (n.)","e":"kingdom","p":"Noun","k":0,"c":[4]},{"l":"res / rem F.","e":"a thing, a situation (for now, the only forms you need to know are res (nominative singular) and rem (accusative singular)","p":"Noun","k":1,"c":[7]},{"l":"rēx / rēgem (m.)","e":"king","p":"Noun","k":1,"c":[4]},{"l":"rīma / rīmam (f.)","e":"a crack","p":"Noun","k":0,"c":[2,5,6,8,13]},{"l":"ripa / ripam F","e":"a riverbank","p":"Noun","k":0,"c":[9]},{"l":"Rōma, Rōmae, f.","e":"Rome","p":"Noun","k":1,"c":[12,14]},{"l":"sacerdos, sacerdotis M or F","e":"priest or priestess","p":"Noun","k":0,"c":[4,6,8]},{"l":"sacrificium, sacrificiī, n.","e":"sacrifice, offering","p":"Noun","k":0,"c":[16]},{"l":"saltātrīcēs","e":"female dancers","p":"Noun","k":0,"c":[15]},{"l":"salūte","e":"safety","p":"Noun","k":0,"c":[11]},{"l":"sanguis / sanguinem, m.","e":"blood","p":"Noun","k":1,"c":[4,5,9]},{"l":"sarcina / sarcinam (f.)","e":"bag","p":"Noun","k":0,"c":[6]},{"l":"saxum / saxum (n.)","e":"a rock; a stone","p":"Noun","k":0,"c":[4,10]},{"l":"scaenae frōns","e":"stage building","p":"Noun","k":0,"c":[13]},{"l":"scapha, scaphae F","e":"small boat","p":"Noun","k":0,"c":[11,12]},{"l":"sella, sellae, f.","e":"a chair","p":"Noun","k":0,"c":[17]},{"l":"senātor / senātōrem (m.)","e":"senator","p":"Noun","k":1,"c":[3]},{"l":"senectūs","e":"old age","p":"Noun","k":0,"c":[14]},{"l":"senex / senem, M or F","e":"old person","p":"Noun","k":1,"c":[1,8]},{"l":"sepulcrum","e":"a tomb","p":"Noun","k":0,"c":[2]},{"l":"servus","e":"slave, enslaved person","p":"Noun","k":1,"c":[1]},{"l":"silentium / -um (n.)","e":"silence","p":"Noun","k":0,"c":[4]},{"l":"silva / silvam F.","e":"a forest","p":"Noun","k":1,"c":[7]},{"l":"simulacrum, simulacri N","e":"statue, image; statue, figurine","p":"Noun","k":0,"c":[4,6,8]},{"l":"sipho, siphonis M","e":"water pump","p":"Noun","k":0,"c":[12]},{"l":"sol, solis M","e":"the sun","p":"Noun","k":1,"c":[7,17]},{"l":"sonor / sonōrem (m.)","e":"a sound","p":"Noun","k":0,"c":[5]},{"l":"speluncā","e":"cave","p":"Noun","k":0,"c":[13]},{"l":"spes / spem F","e":"hope","p":"Noun","k":0,"c":[9]},{"l":"spōnsiōnem","e":"a bet","p":"Noun","k":0,"c":[3]},{"l":"sportā","e":"basket","p":"Noun","k":0,"c":[7]},{"l":"stabulum, stabulī, n.","e":"a stable","p":"Noun","k":0,"c":[17]},{"l":"stercus / stercus (n.)","e":"dung","p":"Noun","k":0,"c":[4]},{"l":"stola / stolam F","e":"a dress","p":"Noun","k":0,"c":[7]},{"l":"stragulum, stragulī N","e":"a blanket","p":"Noun","k":0,"c":[13]},{"l":"taberna, tabernae, f.","e":"a shop, inn","p":"Noun","k":1,"c":[3,9,12]},{"l":"tablīnum, tablīnī, n.","e":"office for the paterfamilias (room next to the atrium)","p":"Noun","k":0,"c":[17]},{"l":"taurus / -um (m.)","e":"bull","p":"Noun","k":0,"c":[4,8]},{"l":"tēctum / tēctum (n.)","e":"roof","p":"Noun","k":0,"c":[6]},{"l":"telum / telum N","e":"a javelin","p":"Noun","k":0,"c":[9]},{"l":"tempestās","e":"the storm","p":"Noun","k":0,"c":[11]},{"l":"templum / templum (n.)","e":"temple","p":"Noun","k":1,"c":[4]},{"l":"tempus, temporis (n.)","e":"time","p":"Noun","k":1,"c":[6,14]},{"l":"tenebrae / tenebrās (f. pl)","e":"darkness","p":"Noun","k":0,"c":[5]},{"l":"terra, terrae, f.","e":"ground","p":"Noun","k":1,"c":[12]},{"l":"thermae / thermas F pl.","e":"baths","p":"Noun","k":0,"c":[10]},{"l":"tībīcen / tībīcinem (m.)","e":"flute-player","p":"Noun","k":0,"c":[4]},{"l":"toga, togae, f.","e":"a toga (formal garment)","p":"Noun","k":0,"c":[17]},{"l":"trabs","e":"beam","p":"Noun","k":0,"c":[14,16]},{"l":"tribūnus / tribūnum (m.)","e":"tribune (officer in the army)","p":"Noun","k":0,"c":[6]},{"l":"trīclīnium","e":"dining room","p":"Noun","k":0,"c":[15]},{"l":"tuba / tubam F","e":"a trumpet","p":"Noun","k":0,"c":[10]},{"l":"turba","e":"crowd","p":"Noun","k":1,"c":[1,2]},{"l":"tūs / tūs (n.)","e":"frankincense (a precious aromatic oil)","p":"Noun","k":0,"c":[4]},{"l":"umbra / umbram F","e":"a ghost","p":"Noun","k":0,"c":[9]},{"l":"unda, undae F","e":"a wave (in the ocean)","p":"Noun","k":1,"c":[11,17]},{"l":"unguentum, unguenti N","e":"perfume","p":"Noun","k":0,"c":[17]},{"l":"urbs / urbem (f.)","e":"city","p":"Noun","k":1,"c":[2,3]},{"l":"ūrīna, ūrīnae, f.","e":"urine","p":"Noun","k":0,"c":[17]},{"l":"urna, urnae, f.","e":"a jug, urn","p":"Noun","k":0,"c":[17]},{"l":"uxor / uxōrem (f.)","e":"wife","p":"Noun","k":1,"c":[2,6]},{"l":"vallis / vallem F","e":"valley","p":"Noun","k":0,"c":[10]},{"l":"velamen, velaminis N","e":"a veil","p":"Noun","k":0,"c":[13]},{"l":"vēnābulum","e":"spear","p":"Noun","k":0,"c":[7]},{"l":"vēnātiōnem","e":"a hunt","p":"Noun","k":0,"c":[7]},{"l":"ventus, venti M","e":"wind","p":"Noun","k":0,"c":[11,12]},{"l":"verbum, verbī N","e":"a word","p":"Noun","k":1,"c":[4,14]},{"l":"vestīmentum / vestīmentum (n.)","e":"item of clothing, garment; pl. = clothes","p":"Noun","k":0,"c":[4,5,10,17]},{"l":"veteranus / veteranum M","e":"a veteran soldier","p":"Noun","k":0,"c":[3,6,8,16]},{"l":"via","e":"street, road","p":"Noun","k":1,"c":[1]},{"l":"vīcus, vīcī M","e":"settlement; neighborhood","p":"Noun","k":0,"c":[7,8,10]},{"l":"vigil, vigilis M","e":"fireman","p":"Noun","k":0,"c":[12]},{"l":"vīlla, vīllae, f.","e":"a country house, house","p":"Noun","k":1,"c":[15]},{"l":"vīnum / vīnum (n.)","e":"wine","p":"Noun","k":1,"c":[2]},{"l":"vir / virum, m.","e":"a man","p":"Noun","k":1,"c":[3,8,9]},{"l":"virgō, virginis, f.","e":"virgin, girl, young woman","p":"Noun","k":0,"c":[16]},{"l":"virtus / virtutem F","e":"manliness, courage","p":"Noun","k":0,"c":[9]},{"l":"vīs","e":"force","p":"Noun","k":0,"c":[11,14]},{"l":"vīta / vītam, f.","e":"life","p":"Noun","k":1,"c":[5,9]},{"l":"vōtum / vōtum (n.)","e":"prayer","p":"Noun","k":0,"c":[4]},{"l":"vōx, vōcis, f.","e":"a voice, shout","p":"Noun","k":1,"c":[10,12]},{"l":"vulnera","e":"wounds","p":"Noun","k":0,"c":[13]},{"l":"vultus","e":"face","p":"Noun","k":0,"c":[11]},{"l":"aeger, aegra, aegrum","e":"sick","p":"Adjective","k":0,"c":[5]},{"l":"albus, alba, album","e":"white; white (team)","p":"Adjective","k":0,"c":[3,13,16]},{"l":"alius, alia, aliud","e":"other","p":"Adjective","k":1,"c":[10]},{"l":"alter, altera, alterum","e":"the other (of 2)","p":"Adjective","k":0,"c":[17]},{"l":"altus, alta, altum","e":"high, deep","p":"Adjective","k":1,"c":[11]},{"l":"angustīs","e":"narrow","p":"Adjective","k":0,"c":[12]},{"l":"antīquus, antīqua, antīquum","e":"old, ancient","p":"Adjective","k":0,"c":[17]},{"l":"ānxius, ānxia, ānxium","e":"worried, concerned","p":"Adjective","k":0,"c":[17]},{"l":"attonitus, attonita, attonitum","e":"astonished, shocked","p":"Adjective","k":0,"c":[3,8,17]},{"l":"Augustus, -a, -um","e":"August","p":"Adjective","k":0,"c":[6]},{"l":"benignus, benigna, benignum","e":"kind, generous","p":"Adjective","k":1,"c":[11,13,17]},{"l":"blandus, blanda, blandum","e":"flattering, \"smooth-talking\"","p":"Adjective","k":0,"c":[7]},{"l":"bonus, bona, bonum","e":"good","p":"Adjective","k":1,"c":[10]},{"l":"brevis, brevis, breve","e":"short, brief (uses 3rd declension endings)","p":"Adjective","k":1,"c":[9,16]},{"l":"calidus, calida, calidum","e":"warm, hot","p":"Adjective","k":0,"c":[5,10,13,17]},{"l":"carus, cara, carum","e":"expensive; dear","p":"Adjective","k":0,"c":[8,13]},{"l":"cēterī, cēterae, cētera, pl.","e":"the rest, the others","p":"Adjective","k":1,"c":[15]},{"l":"compressus, -a, um","e":"constipated","p":"Adjective","k":0,"c":[5]},{"l":"cōnfectus, cōnfecta, cōnfectum","e":"worn out, exhausted","p":"Adjective","k":0,"c":[17]},{"l":"confertus, -a, -um","e":"crowded","p":"Adjective","k":0,"c":[5]},{"l":"cōnfūsus, cōnfūsa, cōnfūsum","e":"confused","p":"Adjective","k":0,"c":[17]},{"l":"con-gelātum","e":"completely frozen","p":"Adjective","k":0,"c":[8]},{"l":"conlāpsa","e":"collapsed","p":"Adjective","k":0,"c":[16]},{"l":"crūdēlis, crūdēlis, crūdēle","e":"cruel","p":"Adjective","k":1,"c":[8,10,12]},{"l":"decōrus, decōra, decōrum","e":"appropriate, proper; suitable, appropriate","p":"Adjective","k":0,"c":[10]},{"l":"dēsertus, dēserta, dēsertum","e":"deserted","p":"Adjective","k":0,"c":[17]},{"l":"dexter, dextra, dextrum","e":"right","p":"Adjective","k":0,"c":[16]},{"l":"difficilis, difficile (uses 3rd declension endings)","e":"difficult","p":"Adjective","k":1,"c":[9]},{"l":"dīrus, dīra, dīrum","e":"dire, dreadful","p":"Adjective","k":1,"c":[14]},{"l":"dīves, dīvitis","e":"rich","p":"Adjective","k":0,"c":[17]},{"l":"ducentos","e":"200","p":"Adjective","k":0,"c":[9]},{"l":"dulcissimus","e":"sweetest","p":"Adjective","k":0,"c":[7]},{"l":"duo, duae, duo","e":"two","p":"Adjective","k":0,"c":[17]},{"l":"dūrus, dūra, dūrum","e":"hard, harsh","p":"Adjective","k":1,"c":[6,14,15,17]},{"l":"fēlīx, fēlīx, fēlīx","e":"lucky, happy; happy, fortunate","p":"Adjective","k":1,"c":[3,10]},{"l":"ferōx, ferōx, ferōcis","e":"fierce, ferocious","p":"Adjective","k":1,"c":[10,13,15]},{"l":"fessus, fessa, fessum","e":"tired","p":"Adjective","k":0,"c":[5,9,11,12,17]},{"l":"fidēlis, fidēle","e":"loyal, faithful","p":"Adjective","k":1,"c":[6,10]},{"l":"fluitans","e":"floating","p":"Adjective","k":0,"c":[7]},{"l":"fortis, forte","e":"strong, brave","p":"Adjective","k":1,"c":[11]},{"l":"frīgidus, frīgida, frīgidum","e":"cold","p":"Adjective","k":0,"c":[7,17]},{"l":"fūmōsam","e":"smoky","p":"Adjective","k":0,"c":[16]},{"l":"gravis, grave (uses 3rd declension endings)","e":"heavy; serious","p":"Adjective","k":1,"c":[5,9]},{"l":"Hispānus","e":"from the province of Hispania","p":"Adjective","k":0,"c":[7]},{"l":"horribile","e":"horrible","p":"Adjective","k":0,"c":[6]},{"l":"ignōtus","e":"unknown","p":"Adjective","k":0,"c":[10]},{"l":"im-motus, -a, -um","e":"unmoved, unmoving","p":"Adjective","k":0,"c":[12]},{"l":"inānia","e":"empty","p":"Adjective","k":0,"c":[15]},{"l":"īnfēlīx, īnfēlīx, īnfēlīx","e":"unlucky, unhappy","p":"Adjective","k":1,"c":[3]},{"l":"ingens (uses 3rd declension endings, more on this to come)","e":"huge","p":"Adjective","k":1,"c":[7]},{"l":"inūtilis, inūtilis, inūtile","e":"useless","p":"Adjective","k":0,"c":[4,9]},{"l":"īrātus, irata, iratum","e":"angry","p":"Adjective","k":1,"c":[4,6,9]},{"l":"Iūlius, -a, -um","e":"July","p":"Adjective","k":0,"c":[6]},{"l":"laetus, laeta, laetum","e":"happy","p":"Adjective","k":1,"c":[3]},{"l":"lentus, lenta, lentum","e":"slow","p":"Adjective","k":1,"c":[9,17]},{"l":"longus, longa, longum","e":"long","p":"Adjective","k":1,"c":[13]},{"l":"magnificus, magnifica, magnificum","e":"magnificent, wonderful, amazing","p":"Adjective","k":0,"c":[17]},{"l":"magnus, magna, magnum","e":"big, large, great","p":"Adjective","k":1,"c":[2]},{"l":"malus, mala, malum","e":"bad, evil","p":"Adjective","k":0,"c":[7]},{"l":"maximus, -a, -um","e":"the biggest, very big","p":"Adjective","k":0,"c":[3,12]},{"l":"medius, media, medium","e":"middle, middle of *","p":"Adjective","k":1,"c":[9]},{"l":"melius","e":"better","p":"Adjective","k":0,"c":[9]},{"l":"meus","e":"my, mine","p":"Adjective","k":1,"c":[1]},{"l":"minor, minoris","e":"smaller, younger","p":"Adjective","k":0,"c":[8]},{"l":"mirabilis (uses 3rd declension endings)","e":"amazing","p":"Adjective","k":0,"c":[7,10]},{"l":"miser, misera, miserum","e":"poor, unfortunate","p":"Adjective","k":1,"c":[10]},{"l":"mortuus, -a, -um","e":"dead","p":"Adjective","k":0,"c":[3,5]},{"l":"multus, multa, multum","e":"much; (pl.) many","p":"Adjective","k":1,"c":[3]},{"l":"necesse","e":"necessary","p":"Adjective","k":0,"c":[17]},{"l":"nōnnūllī, nōnnūllae, nōnnūlla","e":"some, several (\"not none\")","p":"Adjective","k":0,"c":[12,17]},{"l":"nōnus, -a, -um","e":"ninth","p":"Adjective","k":0,"c":[4]},{"l":"noster, nostra, nostrum","e":"our","p":"Adjective","k":1,"c":[4,6,8]},{"l":"nōtus, nōta, nōtum","e":"known, familiar","p":"Adjective","k":0,"c":[9,17]},{"l":"novus, nova, novum","e":"new","p":"Adjective","k":1,"c":[10]},{"l":"nūllus, nūlla, nūllum","e":"no __, not any __","p":"Adjective","k":1,"c":[10]},{"l":"Numidius, -a, -um","e":"from Numidia (a province in Africa, not to be confused with Nubia)","p":"Adjective","k":0,"c":[10]},{"l":"nūptiālis, nūptiālis, nūptiāle","e":"nuptial, wedding","p":"Adjective","k":0,"c":[16]},{"l":"obscūrus, -a, -um","e":"dark","p":"Adjective","k":0,"c":[2,5,6]},{"l":"octāva","e":"eighth","p":"Adjective","k":0,"c":[1]},{"l":"omnis, omnis, omne","e":"every, all","p":"Adjective","k":1,"c":[3]},{"l":"optimus, optima, optimum","e":"very good, excellent; the best, very good","p":"Adjective","k":0,"c":[2,4,5,6,17]},{"l":"parātus, parāta, parātum","e":"ready","p":"Adjective","k":0,"c":[17]},{"l":"parvus, parva, parvum","e":"small","p":"Adjective","k":1,"c":[2,4]},{"l":"paucī, paucae, pauca (only plural forms)","e":"few, a few","p":"Adjective","k":1,"c":[9]},{"l":"perīculōsus, -a, -um","e":"dangerous","p":"Adjective","k":0,"c":[1,2,4,6]},{"l":"perterritus, perterrita, perterritum","e":"terrified","p":"Adjective","k":1,"c":[1,4]},{"l":"plēnus, plēna, plēnum","e":"full","p":"Adjective","k":1,"c":[3,4,5,6,8,17]},{"l":"plūrimī, plūrimae, plūrima","e":"very many","p":"Adjective","k":0,"c":[17]},{"l":"prasinus","e":"green (team)","p":"Adjective","k":0,"c":[3]},{"l":"prīmus, prīma, prīmum","e":"first","p":"Adjective","k":1,"c":[3]},{"l":"proximus, proxima, proximum","e":"nearest; next to","p":"Adjective","k":0,"c":[17]},{"l":"pulcher, pulchra, pulchrum","e":"beautiful, handsome","p":"Adjective","k":1,"c":[4,5]},{"l":"quālis","e":"what kind of","p":"Adjective","k":0,"c":[11,13]},{"l":"raucae","e":"hoarse","p":"Adjective","k":0,"c":[12]},{"l":"Rōmānus, Rōmāna, Rōmānum","e":"Roman","p":"Adjective","k":1,"c":[4]},{"l":"rugosus, rugosa, rugosum","e":"wrinkly","p":"Adjective","k":0,"c":[11,13]},{"l":"russeus, russea, russeum","e":"red (team)","p":"Adjective","k":0,"c":[3,7]},{"l":"rūsticus, -a, -um","e":"in the country, rural","p":"Adjective","k":0,"c":[5]},{"l":"sacer, sacra, sacrum","e":"sacred, holy","p":"Adjective","k":1,"c":[10]},{"l":"saevus, saeva, saevum","e":"savage, cruel","p":"Adjective","k":1,"c":[10,11]},{"l":"sapiēns, sapiēns, sapiēns","e":"wise","p":"Adjective","k":0,"c":[6]},{"l":"scelestus, -a, -um","e":"wicked","p":"Adjective","k":0,"c":[9,10]},{"l":"sedentem","e":"sitting","p":"Adjective","k":0,"c":[17]},{"l":"sōlus, sōla, sōlum","e":"alone, only, lonely, on one's own","p":"Adjective","k":1,"c":[4,11]},{"l":"sordidus, sordida, sordidum","e":"dirty","p":"Adjective","k":0,"c":[4,6,10,14,17]},{"l":"stultus, stulta, stultum","e":"stupid","p":"Adjective","k":1,"c":[12,14]},{"l":"summus, summa, summum","e":"highest, greatest, top (of)","p":"Adjective","k":1,"c":[10,13]},{"l":"suus, sua, suum","e":"her, his, its, their (own)","p":"Adjective","k":1,"c":[13]},{"l":"tertius, -a, -um","e":"third","p":"Adjective","k":0,"c":[9]},{"l":"totus, tota, totum","e":"whole, entire","p":"Adjective","k":1,"c":[6]},{"l":"tristis, tristis, triste","e":"sad","p":"Adjective","k":1,"c":[6]},{"l":"tuus, tua, tuum","e":"your (singular), yours","p":"Adjective","k":1,"c":[6]},{"l":"ulterior","e":"further, more distant","p":"Adjective","k":0,"c":[9]},{"l":"ūnus, ūna, ūnum","e":"one","p":"Adjective","k":0,"c":[8,17]},{"l":"vacuus, vacua, vacuum","e":"empty","p":"Adjective","k":0,"c":[17]},{"l":"validus","e":"strong","p":"Adjective","k":0,"c":[11]},{"l":"vester, vestra, vestrum","e":"your (pl.), yours","p":"Adjective","k":0,"c":[17]},{"l":"vetus","e":"old","p":"Adjective","k":0,"c":[11]},{"l":"vicinas","e":"neighboring","p":"Adjective","k":0,"c":[13]},{"l":"vīmineum","e":"made of wicker","p":"Adjective","k":0,"c":[8]},{"l":"viridis (uses 3rd declension endings)","e":"green","p":"Adjective","k":0,"c":[7]},{"l":"anteā","e":"before","p":"Adverb","k":1,"c":[15]},{"l":"ānxiē","e":"anxiously, worriedly","p":"Adverb","k":0,"c":[17]},{"l":"ardenter","e":"eagerly","p":"Adverb","k":0,"c":[13]},{"l":"bene","e":"well","p":"Adverb","k":1,"c":[11]},{"l":"breviter","e":"briefly","p":"Adverb","k":0,"c":[17]},{"l":"celeriter","e":"quickly","p":"Adverb","k":0,"c":[5,6,17]},{"l":"celerrimē","e":"very quickly","p":"Adverb","k":0,"c":[17]},{"l":"certē","e":"certainly, clearly","p":"Adverb","k":0,"c":[2,17]},{"l":"cōtīdiē","e":"every day","p":"Adverb","k":0,"c":[7,15]},{"l":"crās","e":"tomorrow","p":"Adverb","k":0,"c":[17]},{"l":"cūr?","e":"why?","p":"Adverb","k":1,"c":[4,5,7]},{"l":"deinde","e":"then","p":"Adverb","k":1,"c":[10]},{"l":"dīligenter","e":"carefully","p":"Adverb","k":0,"c":[17]},{"l":"diū","e":"for a long time","p":"Adverb","k":1,"c":[10,12]},{"l":"etiam","e":"even, also","p":"Adverb","k":1,"c":[15]},{"l":"extrā","e":"outside","p":"Adverb","k":0,"c":[17]},{"l":"fēlīciter","e":"luckily, happily; good luck!","p":"Adverb","k":0,"c":[16]},{"l":"ferōciter","e":"fiercely","p":"Adverb","k":0,"c":[17]},{"l":"fortasse","e":"perhaps","p":"Adverb","k":0,"c":[14]},{"l":"frustrā","e":"unsuccessfully, in vain","p":"Adverb","k":1,"c":[6,9,11]},{"l":"fūrtim","e":"secretively","p":"Adverb","k":0,"c":[10]},{"l":"hodiē","e":"today","p":"Adverb","k":1,"c":[11]},{"l":"hūc","e":"here (\"to this place,\" with motion or implied motion)","p":"Adverb","k":1,"c":[17]},{"l":"iam","e":"now, already","p":"Adverb","k":1,"c":[5,6]},{"l":"ibi","e":"there","p":"Adverb","k":1,"c":[11]},{"l":"innocenter","e":"blamelessly, innocently","p":"Adverb","k":0,"c":[17]},{"l":"intentē","e":"intently, closely, carefully","p":"Adverb","k":0,"c":[17]},{"l":"intereā","e":"meanwhile","p":"Adverb","k":1,"c":[15]},{"l":"ita","e":"so, in this way","p":"Adverb","k":0,"c":[17]},{"l":"iterum","e":"again","p":"Adverb","k":1,"c":[3,6,12]},{"l":"laetē","e":"happily, gladly","p":"Adverb","k":0,"c":[6,17]},{"l":"lēniter","e":"gently","p":"Adverb","k":0,"c":[17]},{"l":"lentē","e":"slowly","p":"Adverb","k":0,"c":[3,12,17]},{"l":"libenter","e":"willingly, with pleasure; willingly, gladly","p":"Adverb","k":1,"c":[17]},{"l":"longē","e":"far","p":"Adverb","k":0,"c":[5]},{"l":"maximē","e":"very greatly","p":"Adverb","k":0,"c":[5]},{"l":"minimē","e":"in no way (can also be a way of saying \"no\")","p":"Adverb","k":1,"c":[7]},{"l":"mox","e":"soon","p":"Adverb","k":1,"c":[8,12]},{"l":"multum","e":"much","p":"Adverb","k":1,"c":[15]},{"l":"nihilōminus","e":"nevertheless, anyway","p":"Adverb","k":0,"c":[14,17]},{"l":"nimium","e":"too","p":"Adverb","k":0,"c":[5]},{"l":"non","e":"not","p":"Adverb","k":1,"c":[1]},{"l":"nōndum","e":"not yet","p":"Adverb","k":0,"c":[4]},{"l":"numquam","e":"never","p":"Adverb","k":1,"c":[14]},{"l":"nunc","e":"now","p":"Adverb","k":1,"c":[7]},{"l":"nuper","e":"recently","p":"Adverb","k":0,"c":[9]},{"l":"olim","e":"once, \"once upon a time\"","p":"Adverb","k":1,"c":[7]},{"l":"paene","e":"almost","p":"Adverb","k":1,"c":[14,17]},{"l":"posteā","e":"afterwards","p":"Adverb","k":0,"c":[16]},{"l":"postrīdiē","e":"on the following day","p":"Adverb","k":0,"c":[17]},{"l":"procul","e":"far away","p":"Adverb","k":0,"c":[6]},{"l":"quam __ (+ adj. or adv.)!","e":"how … ! as … as possible; than","p":"Adverb","k":1,"c":[10,17]},{"l":"quandō","e":"when?","p":"Adverb","k":0,"c":[14]},{"l":"quiētē","e":"quietly","p":"Adverb","k":0,"c":[17]},{"l":"quō","e":"where to (\"where\" with motion, e.g. \"where are we going?)","p":"Adverb","k":1,"c":[6,13,16]},{"l":"quō-modō","e":"how? (literally \"in what way\")","p":"Adverb","k":1,"c":[13]},{"l":"quoque","e":"also, too","p":"Adverb","k":1,"c":[2]},{"l":"rēctā [viā]","e":"by a direct route, i.e. directly","p":"Adverb","k":0,"c":[15]},{"l":"saepe","e":"often","p":"Adverb","k":1,"c":[7]},{"l":"semper","e":"always","p":"Adverb","k":1,"c":[5,13]},{"l":"sīc","e":"in this way","p":"Adverb","k":0,"c":[14]},{"l":"sōlum","e":"only","p":"Adverb","k":0,"c":[14]},{"l":"statim","e":"immediately, at once","p":"Adverb","k":1,"c":[6,9]},{"l":"strēnuē","e":"strenuously, energetically, hard","p":"Adverb","k":0,"c":[17]},{"l":"subitō","e":"suddenly","p":"Adverb","k":1,"c":[2,4]},{"l":"tacitē","e":"quietly, silently","p":"Adverb","k":0,"c":[17]},{"l":"tandem","e":"at last, finally","p":"Adverb","k":1,"c":[8]},{"l":"tantum","e":"only","p":"Adverb","k":0,"c":[16]},{"l":"trīste","e":"sadly","p":"Adverb","k":0,"c":[17]},{"l":"tum","e":"at that time, then","p":"Adverb","k":1,"c":[7]},{"l":"ubi?","e":"where? where, when","p":"Adverb","k":1,"c":[1,5,10,11]},{"l":"ubīque","e":"everywhere","p":"Adverb","k":0,"c":[9,16]},{"l":"ūnā","e":"together (as one)","p":"Adverb","k":0,"c":[5]},{"l":"unde","e":"from where","p":"Adverb","k":0,"c":[16]},{"l":"valdē","e":"very, very much","p":"Adverb","k":0,"c":[17]},{"l":"vehementer","e":"loudly, vehemently, strongly","p":"Adverb","k":1,"c":[7]},{"l":"vix","e":"barely, with difficulty","p":"Adverb","k":0,"c":[12,15]},{"l":"aliquis, aliquid","e":"someone, something","p":"Pronoun","k":0,"c":[17]},{"l":"cui","e":"to whom","p":"Pronoun","k":0,"c":[13]},{"l":"eam F.","e":"her, it (accusative)","p":"Pronoun","k":1,"c":[8]},{"l":"ego","e":"I","p":"Pronoun","k":1,"c":[1]},{"l":"eius","e":"his","p":"Pronoun","k":0,"c":[11]},{"l":"eōs","e":"them (masc. pl.)","p":"Pronoun","k":1,"c":[14]},{"l":"eum M.","e":"him, it (accusative)","p":"Pronoun","k":1,"c":[4,8]},{"l":"hic, haec, hoc","e":"this/these; he/she/it","p":"Pronoun","k":1,"c":[16]},{"l":"ille, illa, illud","e":"that/those; he/she/it","p":"Pronoun","k":1,"c":[16]},{"l":"is, ea, id","e":"this OR that, he/she/it/they","p":"Pronoun","k":1,"c":[17]},{"l":"nēmō / nēminem","e":"no one, nobody","p":"Pronoun","k":1,"c":[5]},{"l":"nihil","e":"nothing","p":"Pronoun","k":0,"c":[6]},{"l":"nōs / nōs","e":"we, us","p":"Pronoun","k":1,"c":[4]},{"l":"quem","e":"whom","p":"Pronoun","k":0,"c":[13]},{"l":"qui, quae, quod","e":"who, which","p":"Pronoun","k":1,"c":[13]},{"l":"quibus","e":"to whom","p":"Pronoun","k":0,"c":[13]},{"l":"quis? quid?","e":"who? what?","p":"Pronoun","k":1,"c":[4,6,12,13]},{"l":"sē","e":"himself, herself, itself, themselves (refers back to the subject of the sentence)","p":"Pronoun","k":1,"c":[15]},{"l":"tu","e":"you (singular)","p":"Pronoun","k":1,"c":[1]},{"l":"vōs / vōs","e":"you (plural)","p":"Pronoun","k":1,"c":[4]},{"l":"ā / ab (+ ablative)","e":"from, away from; by","p":"Preposition","k":1,"c":[6,13]},{"l":"ad (+ acc.)","e":"to, towards","p":"Preposition","k":1,"c":[4]},{"l":"ante + acc.","e":"before; in front of","p":"Preposition","k":0,"c":[17]},{"l":"apud (+ acc.)","e":"at the house of; among, at the home of (+acc.); with","p":"Preposition","k":0,"c":[6,9,17]},{"l":"contra + accusative","e":"against","p":"Preposition","k":1,"c":[10]},{"l":"cum","e":"with (+ ablative)","p":"Preposition","k":1,"c":[2,3]},{"l":"dē + abl.","e":"from, down from, about (concerning)","p":"Preposition","k":1,"c":[6,8]},{"l":"ē / ex (+ ablative)","e":"from, out of","p":"Preposition","k":1,"c":[6]},{"l":"in (+ acc. / + abl.)","e":"(+ accusative) into, onto; (+ ablative) in, on","p":"Preposition","k":1,"c":[1,6]},{"l":"inter + acc.","e":"among, between","p":"Preposition","k":1,"c":[13]},{"l":"per","e":"through (+ accusative)","p":"Preposition","k":1,"c":[3]},{"l":"post + acc.","e":"after, behind","p":"Preposition","k":1,"c":[13]},{"l":"prō + ablative","e":"(in exchange) for; in front of, in return for, in the name of","p":"Preposition","k":1,"c":[2,4,6,10,11,17]},{"l":"prope (+ accusative)","e":"near","p":"Preposition","k":1,"c":[4,5,6]},{"l":"sinē (+ ablative)","e":"without","p":"Preposition","k":1,"c":[16]},{"l":"sub + ablative or accusative","e":"under","p":"Preposition","k":1,"c":[10]},{"l":"super + accus.","e":"on top of, above","p":"Preposition","k":0,"c":[8]},{"l":"trans + acc.","e":"across","p":"Preposition","k":1,"c":[7,8]},{"l":"ac (=atque)","e":"and","p":"Conjunction","k":1,"c":[16]},{"l":"aut … aut","e":"either … or; or","p":"Conjunction","k":0,"c":[5,17]},{"l":"enim","e":"for, because","p":"Conjunction","k":0,"c":[17]},{"l":"et","e":"and; even, also","p":"Conjunction","k":1,"c":[2,17]},{"l":"igitur","e":"so, therefore","p":"Conjunction","k":1,"c":[17]},{"l":"itaque","e":"and so, therefore","p":"Conjunction","k":1,"c":[11]},{"l":"nam","e":"for, because","p":"Conjunction","k":0,"c":[17]},{"l":"nec","e":"and not, nor, neither","p":"Conjunction","k":1,"c":[14]},{"l":"nec … nec …","e":"neither … nor …","p":"Conjunction","k":1,"c":[14]},{"l":"neque","e":"and not, nor, neither","p":"Conjunction","k":0,"c":[17]},{"l":"nisi","e":"except","p":"Conjunction","k":0,"c":[11]},{"l":"nōn-ne?","e":"surely?","p":"Conjunction","k":1,"c":[15]},{"l":"postquam","e":"after","p":"Conjunction","k":1,"c":[8]},{"l":"quamquam","e":"although","p":"Conjunction","k":1,"c":[9,10,13]},{"l":"quod","e":"because","p":"Conjunction","k":1,"c":[4]},{"l":"sed","e":"but","p":"Conjunction","k":1,"c":[2]},{"l":"sī","e":"if","p":"Conjunction","k":1,"c":[16]},{"l":"sīcut","e":"just as","p":"Conjunction","k":0,"c":[8]},{"l":"simulatque","e":"as soon as","p":"Conjunction","k":1,"c":[10,15]},{"l":"tamen","e":"however","p":"Conjunction","k":1,"c":[5,13]},{"l":"ut","e":"that; as","p":"Conjunction","k":0,"c":[13,17]},{"l":"di immortalēs","e":"immortal gods! (an interjection of surprise)","p":"Interjection","k":0,"c":[7]},{"l":"ecce!","e":"look!","p":"Interjection","k":0,"c":[2,3,4]},{"l":"ei!","e":"oh!","p":"Interjection","k":0,"c":[14]},{"l":"ēn","e":"look!","p":"Interjection","k":0,"c":[5,14]},{"l":"hercle!","e":"by Hercules!; oh no!","p":"Interjection","k":0,"c":[2,3]},{"l":"heus","e":"hey! hey there!","p":"Interjection","k":0,"c":[14,17]},{"l":"iō!","e":"hurrah!; Yay! Go!","p":"Interjection","k":0,"c":[4,9]},{"l":"mē miserum!","e":"Woe is me!","p":"Interjection","k":0,"c":[3]},{"l":"ohē!","e":"hey!","p":"Interjection","k":0,"c":[3,6,17]},{"l":"st!","e":"sh!","p":"Interjection","k":0,"c":[5]},{"l":"vae!","e":"an exclamation of disapproval","p":"Interjection","k":0,"c":[9]},{"l":"vah!","e":"huh!","p":"Interjection","k":0,"c":[3]},{"l":"aequo animō","e":"\"with a level mind,\" calm","p":"Phrase","k":0,"c":[17]},{"l":"ita verō","e":"yes, yes truly, yes indeed","p":"Phrase","k":1,"c":[13]},{"l":"nimium lentus","e":"too slow","p":"Phrase","k":0,"c":[3]},{"l":"primā luce","e":"at first light (dawn)","p":"Phrase","k":0,"c":[9]},{"l":"prō lectīcā","e":"in front of the/a litter","p":"Phrase","k":0,"c":[1]},{"l":"quam + superlative","e":"as _ as possible","p":"Phrase","k":1,"c":[17]},{"l":"quam celerrimē","e":"as quickly as possible","p":"Phrase","k":0,"c":[12]},{"l":"quō īs?","e":"where are you going?","p":"Phrase","k":0,"c":[14]},{"l":"sine dubiō","e":"without a doubt","p":"Phrase","k":0,"c":[14]},{"l":"tabulātō secundō","e":"third floor","p":"Phrase","k":0,"c":[16]},{"l":"tabulātum tertium","e":"fourth floor","p":"Phrase","k":0,"c":[16]},{"l":"tam alte","e":"so high","p":"Phrase","k":0,"c":[13]},{"l":"tēgula cadit","e":"a roof tile falls","p":"Phrase","k":0,"c":[1]}]}</script>
+<script>
+/* ---------- text helpers + short-answer grader ---------- */
+const MACRON = /[āēīōūȳĀĒĪŌŪȲ]/;
+const ARTICLES = new Set(['a', 'an', 'the']);
+const LEAD = new Set(['to', 'i', 'be']);
+const PREPS = new Set(['to', 'of', 'for', 'at', 'on', 'with', 'from', 'in', 'into', 'onto', 'about', 'by']);
+const STOP = new Set(['to', 'of', 'the', 'a', 'an', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'be', 'is', 'am', 'are',
+  'was', 'were', 'and', 'or', 'in', 'on', 'at', 'for', 'with', 'from', 'by', 'as', 'not', 'no', 'that', 'this', 'what',
+  'who', 'my', 'your', 'his', 'her', 'its', 'our', 'their', 'do', 'doe', 'did', 'have', 'ha', 'up', 'out', 'off', 'over',
+  'into', 'onto', 'so', 'very', 'one', 'someth', 'someon', 'thing', 'person', 'way', 'there', 'here', 'thei', 'them',
+  'him', 'us', 'me', 'can', 'will', 'would', 'should', 'must', 'if', 'then', 'than', 'also', 'too']);
+/* words whose final e must stay (here is not her) */
+const E_KEEP = new Set(['here', 'there', 'where', 'were', 'these', 'those', 'whose', 'none', 'one', 'some', 'are', 'more',
+  'before', 'while', 'whole', 'else', 'once', 'since', 'sure', 'same', 'the', 'she', 'use']);
+const NUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11,
+  twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
+  twenty: 20, thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90, hundred: 100, thousand: 1000 };
+
+/* top-level (...) spans; an unclosed "(" runs to the end of the string */
+function parenSpans(s) {
+  const out = []; let depth = 0, start = -1;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '(') { if (depth === 0) start = i; depth++; }
+    else if (s[i] === ')' && depth > 0) { depth--; if (depth === 0) out.push({ start, end: i + 1, inner: s.slice(start + 1, i).trim() }); }
+  }
+  if (depth > 0) out.push({ start, end: s.length, inner: s.slice(start + 1).trim() });
+  return out;
+}
+function tidy(s) {
+  return s.replace(/\s+/g, ' ').replace(/\s+([,;:!?.])/g, '$1').replace(/^[\s,;]+|[\s,;]+$/g, '').trim();
+}
+function dropSpans(s, shouldDrop) {
+  let res = '', last = 0; const dropped = [];
+  for (const sp of parenSpans(s)) {
+    if (shouldDrop(sp.inner)) { res += s.slice(last, sp.start); last = sp.end; dropped.push(sp.inner); }
+  }
+  return { text: tidy(res + s.slice(last)), dropped };
+}
+const deaccent = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+/* Latin headword: keep short grammar markers (m.), (+ acc.), (=atque); move everything else to a note */
+const GRAMMAR_MARK = /^(\+|=)|^[mfn]\.?(\s*\/\s*[mfn]\.?)?(\s*pl\.?)?$/i;
+function promptParts(latin) {
+  let notes = [];
+  let s = latin;
+  const plural = s.match(/,\s*only used in plural/i);
+  if (plural) { s = s.replace(plural[0], ''); notes.push('only used in plural'); }
+  const r = dropSpans(s, inner => !GRAMMAR_MARK.test(inner));
+  notes = notes.concat(r.dropped.map(n => n.replace(/\s+/g, ' ').replace(/[.;,]$/, '')));
+  return { prompt: r.text.replace(/,\s*$/, ''), note: notes.join('. ') };
+}
+
+/* English as shown on a multiple-choice button: drop long notes and anything that leaks the Latin */
+const LEAKY = inner => inner.length > 24 || MACRON.test(inner) || /^literally/i.test(inner) || /\w\s*\+\s*\w/.test(inner);
+function optionText(english, latin) {
+  const r = dropSpans(english, LEAKY);
+  let text = r.text || english;
+  /* a loanword on its own ("impluvium", "as") would give the answer away, so keep its explanation */
+  if (latin && r.dropped.length) {
+    const first = s => (deaccent(s).match(/[a-z]+/g) || []).filter(w => !ARTICLES.has(w))[0] || '';
+    const a = first(text), b = first(latin);
+    if (a && b && (a === b || (a.length >= 4 && b.startsWith(a.slice(0, 4))))) text = english;
+  }
+  const seen = new Set();
+  return text.split(/;\s*/).filter(p => { const k = p.trim().toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).join('; ');
+}
+
+function stem(w) {
+  if (/^\d+$/.test(w)) return w;
+  let b = w;
+  const undouble = x => (/([^lsz])\1$/.test(x) ? x.slice(0, -1) : x);
+  if (b.length > 4 && /ies$/.test(b)) b = b.slice(0, -3) + 'y';
+  else if (b.length > 4 && /ied$/.test(b)) b = b.slice(0, -3) + 'y';
+  else if (b.length > 5 && /ing$/.test(b)) b = undouble(b.slice(0, -3));
+  else if (b.length > 4 && /ed$/.test(b)) b = undouble(b.slice(0, -2));
+  else if (b.length > 4 && /(ch|sh|[sxz])es$/.test(b)) b = b.slice(0, -2);
+  else if (b.length > 3 && /s$/.test(b) && !/(ss|us|is)$/.test(b)) b = b.slice(0, -1);
+  if (/y$/.test(b)) b = b.slice(0, -1) + 'i';
+  if (b.length > 3 && /e$/.test(b) && !E_KEEP.has(b)) b = b.slice(0, -1);
+  return b;
+}
+
+/* words of an English answer, lower-cased, articles dropped, leading "to"/"I"/"be" dropped */
+function words(s) {
+  s = deaccent(s).replace(/[’‘`´]/g, "'");
+  s = s.replace(/\b(i|you|he|she|it|we|they|that|there|what|who|where)'(m|re|s|ve|ll|d)\b/g,
+    (m, a, b) => a + ' ' + { m: 'am', re: 'are', s: 'is', ve: 'have', ll: 'will', d: 'would' }[b]);
+  s = s.replace(/\bcan'?t\b/g, 'can not').replace(/\bcannot\b/g, 'can not').replace(/\bwon'?t\b/g, 'will not')
+    .replace(/n't\b/g, ' not').replace(/'/g, '').replace(/[^a-z0-9 ]+/g, ' ');
+  const out = [];
+  for (const x of s.split(/\s+/)) {
+    if (!x || ARTICLES.has(x)) continue;
+    const n = NUM[x];                                    // number words -> digits ("two hundred" -> 200)
+    if (n === undefined) { out.push(x); continue; }
+    const prev = out.length ? Number(out[out.length - 1]) : NaN;
+    if ((n === 100 || n === 1000) && prev > 0 && prev < 100) out[out.length - 1] = String(prev * n);
+    else out.push(String(n));
+  }
+  while (out.length > 1 && LEAD.has(out[0])) out.shift();
+  return out;
+}
+/* {s: stemmed form used for exact matching, p: plain form used for typo matching} */
+const form = text => { const w = words(text); return { s: w.map(stem).join(' '), p: w.join(' '), w }; };
+
+function addVariant(map, text) {
+  const t = tidy(text.replace(/[…_]+/g, ' '));
+  if (!t) return;
+  const pieces = [t];
+  if (t.includes('/')) {
+    const halves = t.split('/');                                // "drugged/put to sleep", "former slave/freedman"
+    if (halves.every(h => words(h).map(stem).some(w => !STOP.has(w)))) halves.forEach(p => pieces.push(p));
+    let combos = [[]];                                          // "I drive/spur on", "he/she/it is"
+    for (const tok of t.split(/\s+/)) {
+      const alts = tok.split('/').filter(Boolean);
+      const next = [];
+      for (const c of combos) for (const a of alts) next.push(c.concat(a));
+      combos = next.slice(0, 24);
+    }
+    combos.forEach(c => pieces.push(c.join(' ')));
+  }
+  for (const piece of pieces) {
+    const f = form(piece.replace(/\//g, ' '));
+    if (!f.s) continue;
+    map.set(f.s + '|' + f.p, { s: f.s, p: f.p });
+    if (f.w.length > 1 && PREPS.has(f.w[f.w.length - 1])) {   // "look out (for)" also accepts "look out"
+      const g = form(f.w.slice(0, -1).join(' '));
+      map.set(g.s + '|' + g.p, { s: g.s, p: g.p });
+    }
+  }
+}
+
+/* every acceptable answer for a definition */
+function answerVariants(english) {
+  const s = english
+    .replace(/\bi\.e\.\s*/gi, '; ').replace(/\be\.g\.\s*/gi, '')
+    .replace(/\bpl\.\s*=\s*/gi, '; ')
+    .replace(/\(\s*\+[^)]*\)/g, ' ')
+    .replace(/\+\s*[a-z]+\.?/gi, ' ');
+  const bare = dropSpans(s, () => true).text;
+  const withShort = dropSpans(s, LEAKY).text.replace(/[()]/g, ' ');
+  const map = new Map();
+  for (const base of [bare, withShort]) {
+    for (const part of base.split(/[;!?]/)) {
+      addVariant(map, part);
+      for (const sub of part.split(/,|\bor\b/i)) addVariant(map, sub);
+    }
+  }
+  return [...map.values()];
+}
+
+/* optimal string alignment distance */
+function osa(a, b) {
+  const m = a.length, n = b.length;
+  if (Math.abs(m - n) > 3) return 99;
+  const d = Array.from({ length: m + 1 }, (_, i) => { const r = new Array(n + 1).fill(0); r[0] = i; return r; });
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const c = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+    }
+  }
+  return d[m][n];
+}
+function swapped(a, b) {
+  if (a.length !== b.length) return false;
+  const diff = [];
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) diff.push(i);
+  return diff.length === 2 && diff[1] === diff[0] + 1 && a[diff[0]] === b[diff[1]] && a[diff[1]] === b[diff[0]];
+}
+/* a slip of the keyboard, not a different word: short words may only drop, add or swap a letter */
+function typoOf(a, b) {
+  if (!a || !b || a === b || a[0] !== b[0]) return false;
+  const L = Math.max(a.length, b.length);
+  if (L <= 3) return false;
+  const d = osa(a, b);
+  if (L <= 5) return d === 1 && (a.length !== b.length || swapped(a, b));
+  return d <= (L <= 9 ? 1 : 2);
+}
+const contentWords = s => s.split(' ').filter(w => w.length >= 2 && !STOP.has(w));
+
+/* verdict: 'correct' | 'typo' (right word, spelling slightly off) | 'close' | 'wrong' | 'empty'
+   known: every answer accepted for any word in the lists; typing one of those is a real answer, never a typo */
+function grade(input, variants, known) {
+  const raw = (input || '').trim();
+  if (!raw) return 'empty';
+  const parts = [raw, ...raw.split(/[,;\/?!]|\bor\b/i)].map(form).filter(f => f.s);
+  if (!parts.length) return 'wrong';
+  for (const p of parts) if (variants.some(v => v.s === p.s)) return 'correct';
+  const realWord = p => STOP.has(p.s) || (known && known.has(p.s));
+  for (const p of parts) if (!realWord(p) && variants.some(v => typoOf(p.p, v.p) || typoOf(p.s, v.s))) return 'typo';
+  const vw = new Set(variants.flatMap(v => contentWords(v.s)));
+  for (const p of parts) {
+    if (contentWords(p.s).some(w => vw.has(w))) return 'close';
+    if (variants.some(v => v.p.length >= 4 && osa(p.p, v.p) <= 2)) return 'close';
+  }
+  return 'wrong';
+}
+</script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const DATA = JSON.parse($('vocab-data').textContent);
+  const POS_ORDER = ['Verb', 'Noun', 'Adjective', 'Adverb', 'Pronoun', 'Preposition', 'Conjunction', 'Interjection', 'Phrase'];
+  const POS_PLURAL = { Verb: 'Verbs', Noun: 'Nouns', Adjective: 'Adjectives', Adverb: 'Adverbs', Pronoun: 'Pronouns',
+    Preposition: 'Prepositions', Conjunction: 'Conjunctions', Interjection: 'Interjections', Phrase: 'Phrases' };
+  const LIST_NAME = { ess: 'Essential Vocabs', full: 'Full Vocabulary' };
+  const MODE_NAME = { mixed: 'Mixed questions', mc: 'Multiple choice', sa: 'Short answer' };
+  const CHAPTERS = Array.from({ length: 17 }, (_, i) => i + 1);
+
+  function prep(arr, list) {
+    return arr.map((w, i) => {
+      const pp = promptParts(w.l);
+      const variants = answerVariants(w.e);
+      return { id: list + ':' + i, list, l: w.l, e: w.e, p: w.p, c: w.c, k: w.k, prompt: pp.prompt, note: pp.note,
+        opt: optionText(w.e, w.l), variants, keys: new Set(variants.map(v => v.s)) };
+    });
+  }
+  const LISTS = { ess: prep(DATA.ess, 'ess'), full: prep(DATA.full, 'full') };
+  const KNOWN = new Set([...LISTS.ess, ...LISTS.full].flatMap(w => [...w.keys]));
+
+  const settings = { list: 'ess', mode: 'mixed', size: 20, pos: new Set(POS_ORDER), ch: new Set(CHAPTERS) };
+  let R = null;   // the round
+  let Q = null;   // the question on screen
+
+  const rand = n => Math.floor(Math.random() * n);
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rand(i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function el(tag, attrs, ...kids) {
+    const n = document.createElement(tag);
+    if (attrs) for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === 'class') n.className = v; else n.setAttribute(k, v === true ? '' : v);
+    }
+    for (const kid of kids.flat()) if (kid != null && kid !== false) n.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+    return n;
+  }
+
+  /* "portō, portāre, portāvī" -> bold lemma, muted principal parts */
+  function latinParts(text) {
+    const m = text.match(/^(.+?)(?=,|\s\/|\s\(|$)/);
+    const lemma = m ? m[1] : text;
+    const parts = [el('span', { class: 'lemma' }, lemma)];
+    if (text.length > lemma.length) parts.push(el('span', { class: 'rest' }, text.slice(lemma.length)));
+    return parts;
+  }
+  function chapterRange(set) {
+    const a = [...set].sort((x, y) => x - y);
+    if (a.length === CHAPTERS.length) return 'Ch. 1–17';
+    const parts = [];
+    for (let i = 0; i < a.length;) {
+      let j = i;
+      while (j + 1 < a.length && a[j + 1] === a[j] + 1) j++;
+      parts.push(j >= i + 2 ? a[i] + '–' + a[j] : a.slice(i, j + 1).join(', '));
+      i = j + 1;
+    }
+    return 'Ch. ' + parts.join(', ');
+  }
+
+  /* ---------- settings ---------- */
+  const matching = () => LISTS[settings.list].filter(w => settings.pos.has(w.p) && w.c.some(c => settings.ch.has(c)));
+  function posCounts() { const c = {}; LISTS[settings.list].forEach(w => { c[w.p] = (c[w.p] || 0) + 1; }); return c; }
+  function renderListChoices() {
+    $('listChoices').replaceChildren(...['ess', 'full'].map(k => el('label', { class: 'choice' },
+      el('input', { type: 'radio', name: 'list', value: k, id: 'list-' + k, checked: settings.list === k }),
+      el('span', null, LIST_NAME[k], el('small', null, LISTS[k].length)))));
+  }
+  function renderPosChips() {
+    const counts = posCounts();
+    $('posChoices').replaceChildren(...POS_ORDER.filter(p => counts[p]).map(p => el('label', { class: 'choice' },
+      el('input', { type: 'checkbox', name: 'pos', value: p, id: 'pos-' + p, checked: settings.pos.has(p) }),
+      el('span', null, POS_PLURAL[p], el('small', null, counts[p])))));
+  }
+  function renderChapterChips() {
+    $('chChoices').replaceChildren(...CHAPTERS.map(c => el('label', { class: 'choice' },
+      el('input', { type: 'checkbox', name: 'ch', value: c, id: 'ch-' + c, checked: settings.ch.has(c), 'aria-label': 'Chapter ' + c }),
+      el('span', null, c))));
+  }
+  function updateMatch() {
+    const n = matching().length;
+    const asked = settings.size === 'all' ? n : Math.min(n, settings.size);
+    $('matchCount').replaceChildren(n
+      ? el('span', null, el('strong', null, n), ` word${n === 1 ? '' : 's'} match · this round asks ${asked}`)
+      : el('span', null, 'No words match. Turn on at least one part of speech and one chapter.'));
+    $('startBtn').disabled = !n;
+  }
+  function openSettings() {
+    renderListChoices(); renderPosChips(); renderChapterChips();
+    $('mode-' + settings.mode).checked = true;
+    $('size-' + settings.size).checked = true;
+    updateMatch();
+    $('settings').hidden = false;
+    ['status', 'card', 'summary', 'keys', 'settingsBtn'].forEach(id => { $(id).hidden = true; });
+    $('settingsBtn').setAttribute('aria-expanded', 'true');
+    $('closeSettings').hidden = !R;
+    const first = $('settings').querySelector('input:checked');
+    if (first) first.focus({ preventScroll: true });
+    window.scrollTo(0, 0);
+  }
+  function closeSettings() {
+    $('settings').hidden = true;
+    $('settingsBtn').hidden = false; $('keys').hidden = false; $('status').hidden = false;
+    $('settingsBtn').setAttribute('aria-expanded', 'false');
+    if (R && R.finished) { $('summary').hidden = false; $('card').hidden = true; } else { $('card').hidden = false; $('summary').hidden = true; }
+  }
+  $('settingsBtn').addEventListener('click', openSettings);
+  $('closeSettings').addEventListener('click', closeSettings);
+  $('settings').addEventListener('change', e => {
+    const t = e.target;
+    if (t.name === 'list') { settings.list = t.value; renderPosChips(); }
+    else if (t.name === 'mode') settings.mode = t.value;
+    else if (t.name === 'size') settings.size = t.value === 'all' ? 'all' : Number(t.value);
+    else if (t.name === 'pos') { if (t.checked) settings.pos.add(t.value); else settings.pos.delete(t.value); }
+    else if (t.name === 'ch') { if (t.checked) settings.ch.add(+t.value); else settings.ch.delete(+t.value); }
+    updateMatch();
+  });
+  $('settings').addEventListener('click', e => {
+    const b = e.target.closest('[data-all],[data-none]');
+    if (!b) return;
+    const which = b.dataset.all || b.dataset.none;
+    const set = which === 'pos' ? settings.pos : settings.ch;
+    set.clear();
+    if (b.dataset.all) (which === 'pos' ? POS_ORDER : CHAPTERS).forEach(v => set.add(v));
+    if (which === 'pos') renderPosChips(); else renderChapterChips();
+    updateMatch();
+  });
+  $('settings').addEventListener('submit', e => {
+    e.preventDefault();
+    const words = matching();
+    if (!words.length) return;
+    startRound(words, null);
+    closeSettings();
+  });
+
+  /* ---------- round ---------- */
+  function roundLabel() {
+    const counts = posCounts();
+    const avail = POS_ORDER.filter(p => counts[p]);
+    const on = avail.filter(p => settings.pos.has(p));
+    let label = LIST_NAME[settings.list] + ' · ' + chapterRange(settings.ch);
+    if (on.length < avail.length) label += ' · ' + on.map(p => POS_PLURAL[p]).join(', ');
+    return label;
+  }
+  function startRound(words, label) {
+    const pool = shuffle(words.slice());
+    const size = label || settings.size === 'all' ? pool.length : Math.min(settings.size, pool.length);
+    const picked = pool.slice(0, size);
+    R = { words: picked, queue: picked.map(w => ({ w })), total: picked.length, done: 0, first: new Map(), misses: new Map(),
+      streak: 0, best: 0, lastTypes: [], mode: settings.mode, label: label || roundLabel(), finished: false, endedEarly: false };
+    $('summary').hidden = true;
+    next();
+  }
+  function pickType() {
+    if (R.mode !== 'mixed') return R.mode;
+    const t = R.lastTypes, n = t.length;
+    if (n >= 2 && t[n - 1] === t[n - 2]) return t[n - 1] === 'mc' ? 'sa' : 'mc';
+    return Math.random() < 0.5 ? 'mc' : 'sa';
+  }
+  function buildOptions(w) {
+    const src = LISTS[w.list];
+    const same = shuffle(src.filter(x => x.p === w.p && x !== w));
+    const other = shuffle(src.filter(x => x.p !== w.p));
+    const clash = (a, b) => a.opt.toLowerCase() === b.opt.toLowerCase() || [...a.keys].some(k => b.keys.has(k));
+    const picked = [];
+    for (const x of same.concat(other)) {
+      if (picked.length === 3) break;
+      if (clash(x, w) || picked.some(p => clash(p, x))) continue;
+      picked.push(x);
+    }
+    return shuffle([w, ...picked]);
+  }
+  function next() {
+    if (!R || R.finished) return;
+    if (!R.queue.length) { finish(false); return; }
+    const item = R.queue.shift();
+    const type = item.type || pickType();
+    R.lastTypes.push(type);
+    Q = { w: item.w, type, retry: !!item.retry, answered: false, verdict: null, prevStreak: R.streak, requeued: null, overridden: false };
+    if (type === 'mc') Q.options = buildOptions(item.w);
+    renderQuestion();
+  }
+  function record(ok) {
+    const id = Q.w.id;
+    if (!Q.retry && !R.first.has(id)) R.first.set(id, ok);
+    if (ok) {
+      R.done++; R.streak++; R.best = Math.max(R.best, R.streak);
+    } else {
+      R.streak = 0;
+      R.misses.set(id, (R.misses.get(id) || 0) + 1);
+      const type = R.mode === 'mixed' ? (Q.type === 'mc' ? 'sa' : 'mc') : R.mode;
+      Q.requeued = { w: Q.w, retry: true, type };
+      R.queue.splice(Math.min(R.queue.length, 3 + rand(3)), 0, Q.requeued);
+    }
+  }
+
+  /* ---------- question view ---------- */
+  function renderQuestion() {
+    const w = Q.w;
+    $('card').hidden = false; $('summary').hidden = true;
+    $('qPos').textContent = w.p;
+    $('qCh').textContent = 'Ch. ' + w.c.join(', ') + (w.list === 'full' && w.k ? ' · learning list' : '');
+    $('qRetry').hidden = !Q.retry;
+    $('qType').textContent = Q.type === 'mc' ? 'Multiple choice' : 'Short answer';
+    const pr = $('prompt');
+    pr.replaceChildren(...latinParts(w.prompt));
+    pr.classList.toggle('long', w.prompt.length > 24);
+    $('instr').textContent = Q.type === 'mc' ? 'Choose the English meaning.' : 'Type the English meaning.';
+    $('feedback').hidden = true; $('nextRow').hidden = true; $('overrideBtn').hidden = true; $('saHint').hidden = true;
+    if (Q.type === 'mc') {
+      $('saArea').hidden = true; $('mcArea').hidden = false;
+      $('mcArea').replaceChildren(...Q.options.map((o, i) => el('button', { type: 'button', class: 'opt', 'data-i': i },
+        el('span', { class: 'key', 'aria-hidden': 'true' }, 'ABCD'[i]),
+        el('span', { class: 'txt' }, o.opt),
+        el('span', { class: 'lat', lang: 'la', hidden: true }, o.prompt))));
+    } else {
+      $('mcArea').hidden = true; $('saArea').hidden = false;
+      const inp = $('saInput');
+      inp.value = ''; inp.readOnly = false; inp.className = '';
+      $('checkBtn').hidden = false; $('revealBtn').hidden = false;
+    }
+    $('announce').textContent = w.prompt + '. ' + (Q.type === 'mc' ? 'Multiple choice.' : 'Type the meaning.');
+    updateStatus();
+    const card = $('card');
+    card.classList.remove('enter'); void card.offsetWidth; card.classList.add('enter');
+    if (card.getBoundingClientRect().top < 0) card.scrollIntoView({ block: 'start' });
+    if (Q.type === 'sa') $('saInput').focus({ preventScroll: true }); else card.focus({ preventScroll: true });
+  }
+
+  function answerMC(i) {
+    if (!Q || Q.answered || Q.type !== 'mc') return;
+    const ok = Q.options[i] === Q.w;
+    Q.answered = true; Q.choice = i; Q.verdict = ok ? 'correct' : 'wrong';
+    record(ok);
+    [...$('mcArea').children].forEach((b, j) => {
+      const o = Q.options[j];
+      b.disabled = true;
+      b.classList.toggle('is-right', o === Q.w);
+      b.classList.toggle('is-wrong', j === i && !ok);
+      b.classList.toggle('is-dim', o !== Q.w && j !== i);
+      b.querySelector('.lat').hidden = false;
+    });
+    showFeedback();
+  }
+  $('mcArea').addEventListener('click', e => {
+    const b = e.target.closest('.opt');
+    if (b && !b.disabled) answerMC(+b.dataset.i);
+  });
+
+  function lockInput(cls) {
+    const inp = $('saInput');
+    inp.readOnly = true; inp.className = cls;
+    $('checkBtn').hidden = true; $('revealBtn').hidden = true; $('saHint').hidden = true;
+  }
+  $('saArea').addEventListener('submit', e => {
+    e.preventDefault();
+    if (!Q || Q.type !== 'sa') return;
+    if (Q.answered) { next(); return; }
+    const text = $('saInput').value;
+    const v = grade(text, Q.w.variants, KNOWN);
+    if (v === 'empty') { $('saHint').hidden = false; $('saInput').focus(); return; }
+    Q.answered = true; Q.input = text.trim(); Q.verdict = v;
+    const ok = v === 'correct' || v === 'typo';
+    record(ok);
+    lockInput(ok ? 'is-right' : v === 'close' ? 'is-close' : 'is-wrong');
+    showFeedback();
+  });
+  $('revealBtn').addEventListener('click', () => {
+    if (!Q || Q.answered || Q.type !== 'sa') return;
+    Q.answered = true; Q.input = $('saInput').value.trim(); Q.verdict = 'revealed';
+    record(false);
+    lockInput('is-wrong');
+    showFeedback();
+  });
+  $('overrideBtn').addEventListener('click', () => {
+    if (!Q || !Q.answered || Q.overridden || !(Q.verdict === 'wrong' || Q.verdict === 'close')) return;
+    Q.overridden = true; Q.verdict = 'override';
+    const id = Q.w.id, m = (R.misses.get(id) || 1) - 1;
+    if (m > 0) R.misses.set(id, m); else R.misses.delete(id);
+    if (!Q.retry) R.first.set(id, true);
+    const at = R.queue.indexOf(Q.requeued);
+    if (at >= 0) R.queue.splice(at, 1);
+    R.done++; R.streak = Q.prevStreak + 1; R.best = Math.max(R.best, R.streak);
+    $('saInput').className = 'is-right';
+    showFeedback();
+  });
+  $('nextBtn').addEventListener('click', next);
+
+  function showFeedback() {
+    const w = Q.w, v = Q.verdict;
+    const good = v === 'correct' || v === 'typo' || v === 'override';
+    const tone = good ? 'good' : v === 'close' ? 'close' : 'bad';
+    const title = { correct: 'Correct', typo: 'Correct, but check the spelling', override: 'Counted as correct', close: 'Close',
+      wrong: 'Not quite', revealed: 'Here is the answer' }[v];
+    const kids = [
+      el('p', { class: 'verdict' }, el('span', { class: 'glyph', 'aria-hidden': 'true' }, el('span', null, good ? '✓' : v === 'close' ? '~' : '✕')), title),
+      el('p', { class: 'answer' }, el('span', { class: 'la', lang: 'la' }, w.prompt), ' = ', w.e),
+    ];
+    if (Q.type === 'sa' && Q.input && v !== 'correct') kids.push(el('p', { class: 'small' }, 'You wrote: ', el('strong', null, Q.input)));
+    if (Q.type === 'mc' && v === 'wrong') {
+      const picked = Q.options[Q.choice].prompt;
+      kids.push(el('p', { class: 'small' }, 'You picked the meaning of ', el('em', { lang: 'la' }, picked), /[.!?]$/.test(picked) ? '' : '.'));
+    }
+    if (w.note) kids.push(el('p', { class: 'small' }, 'Note: ' + w.note));
+    if (!good) kids.push(el('p', { class: 'small' }, 'This word comes back in a few questions.'));
+    const fb = $('feedback');
+    fb.className = 'feedback ' + tone;
+    fb.replaceChildren(...kids);
+    fb.hidden = false;
+    $('overrideBtn').hidden = !(Q.type === 'sa' && (v === 'wrong' || v === 'close'));
+    $('nextRow').hidden = false;
+    updateStatus();
+    $('nextBtn').focus({ preventScroll: true });
+    const r = $('nextRow').getBoundingClientRect();
+    if (r.bottom > window.innerHeight) $('nextRow').scrollIntoView({ block: 'end' });
+  }
+
+  function updateStatus() {
+    if (!R) return;
+    $('roundLabel').replaceChildren(el('strong', null, R.label), ' · ' + MODE_NAME[R.mode]);
+    $('stLearned').textContent = R.done + ' / ' + R.total;
+    const seen = R.first.size, right = [...R.first.values()].filter(Boolean).length;
+    $('stFirst').textContent = seen ? right + ' / ' + seen : '–';
+    $('stStreak').textContent = R.streak;
+    $('barFill').style.width = (R.total ? (100 * R.done) / R.total : 0) + '%';
+    $('bar').setAttribute('aria-valuemax', R.total);
+    $('bar').setAttribute('aria-valuenow', R.done);
+    $('endBtn').hidden = R.finished;
+  }
+
+  /* ---------- summary ---------- */
+  function finish(early) {
+    if (!R || R.finished) return;
+    R.finished = true; R.endedEarly = early && R.done < R.total; Q = null;
+    const seen = R.first.size;
+    const right = [...R.first.values()].filter(Boolean).length;
+    const missed = R.words.filter(w => R.first.get(w.id) === false);
+    const kids = [
+      el('div', { class: 'sum-head' },
+        el('h2', null, R.endedEarly ? 'Round ended' : 'Round complete'),
+        el('p', { class: 'small' }, R.label + ' · ' + MODE_NAME[R.mode])),
+      el('p', { class: 'score' }, right + ' / ' + seen, el('span', null, 'right on the first try')),
+      el('p', { class: 'small' }, [
+        seen ? Math.round((100 * right) / seen) + '% first-try accuracy' : 'No words answered',
+        'best streak ' + R.best,
+        R.endedEarly ? (R.total - R.done) + ' of ' + R.total + ' words not finished' : null,
+      ].filter(Boolean).join(' · ')),
+    ];
+    if (missed.length) {
+      kids.push(el('p', { class: 'small' }, el('strong', null, 'Review these ' + missed.length + ' word' + (missed.length === 1 ? '' : 's'))));
+      kids.push(el('ul', { class: 'review' }, missed.map(w => el('li', null,
+        el('span', { class: 'la', lang: 'la' }, w.prompt),
+        el('span', { class: 'en' }, w.e),
+        R.misses.get(w.id) > 1 ? el('span', { class: 'x' }, 'Missed ' + R.misses.get(w.id) + ' times') : null))));
+    } else if (seen && !R.endedEarly) {
+      kids.push(el('p', { class: 'answer' }, el('span', { class: 'la', lang: 'la' }, 'Optimē!'), ' Every word right on the first try.'));
+    }
+    const actions = el('div', { class: 'sum-actions' });
+    if (missed.length) {
+      const b = el('button', { class: 'btn btn-primary', type: 'button' }, 'Practice these ' + missed.length);
+      b.addEventListener('click', () => startRound(missed, 'Missed words from last round'));
+      actions.append(b);
+    }
+    const again = el('button', { class: 'btn ' + (missed.length ? 'btn-ghost' : 'btn-primary'), type: 'button' }, 'New round');
+    again.addEventListener('click', () => { const words = matching(); if (words.length) startRound(words, null); else openSettings(); });
+    const set = el('button', { class: 'btn btn-ghost', type: 'button' }, 'Change settings');
+    set.addEventListener('click', openSettings);
+    actions.append(again, set);
+    kids.push(actions);
+    const s = $('summary');
+    s.replaceChildren(...kids);
+    $('card').hidden = true; s.hidden = false;
+    updateStatus();
+    $('announce').textContent = 'Round finished. ' + right + ' of ' + seen + ' right on the first try.';
+    if (s.getBoundingClientRect().top < 0) s.scrollIntoView({ block: 'start' });
+    s.focus({ preventScroll: true });
+  }
+  $('endBtn').addEventListener('click', () => finish(true));
+
+  /* ---------- keyboard ---------- */
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (!$('settings').hidden) { if (e.key === 'Escape' && R) closeSettings(); return; }
+    if (!Q) return;
+    const tag = e.target && e.target.tagName;
+    if (Q.type === 'mc' && !Q.answered) {
+      const k = e.key.toLowerCase();
+      let i = 'abcd'.indexOf(k);
+      if (i < 0) i = '1234'.indexOf(k);
+      if (k.length === 1 && i >= 0 && i < Q.options.length) { e.preventDefault(); answerMC(i); }
+      return;
+    }
+    if (Q.answered && e.key === 'Enter' && tag !== 'INPUT' && tag !== 'BUTTON') { e.preventDefault(); next(); }
+  });
+
+  startRound(matching(), null);
+})();
+</script>
+</body>
+</html>
